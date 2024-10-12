@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db';
 
+import passport from 'passport';
+import { auth } from './auth/auth';
+
 import { readConfig } from './config';
 
 const bodyParser = require('body-parser');
@@ -34,6 +37,10 @@ class App {
     this.app.use(bodyParser.urlencoded({ extended: true }));
 
     // this.route.routes(this.app);
+
+    // Set up OAuth 2.0 authentication through the passport.js library.
+    auth(passport);
+
   }
 
   private config(): void {
