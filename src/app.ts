@@ -41,6 +41,9 @@ class App {
     // Set up OAuth 2.0 authentication through the passport.js library.
     auth(passport);
 
+    // Set up passport and session handling.
+    this.app.use(passport.initialize());
+
   }
 
   private config(): void {
