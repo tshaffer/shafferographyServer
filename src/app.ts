@@ -9,12 +9,12 @@ import { readConfig } from './config';
 
 const bodyParser = require('body-parser');
 
-// import { Routes } from './routes/routes';
+import { Routes } from './routes/routes';
 
 class App {
 
   public app: express.Application;
-  // public route: Routes = new Routes();
+  public route: Routes = new Routes();
 
   constructor() {
 
@@ -36,7 +36,7 @@ class App {
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
 
-    // this.route.routes(this.app);
+    this.route.routes(this.app);
 
     // Set up OAuth 2.0 authentication through the passport.js library.
     auth(passport);

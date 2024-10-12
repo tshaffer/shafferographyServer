@@ -2,3 +2,13 @@ node_modules/
 dist/
 src/config/config.env
 secrets/
+build/
+public/images
+public/userAvatars
+public/appAvatars
+public/backupAppAvatars
+public/takeouts
+public/old_images
+public/pgPhotoManagementAgain-images
+public/pgPhotoManagerment_images
+public/SHAFFEROTO
