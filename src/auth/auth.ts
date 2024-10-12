@@ -13,11 +13,11 @@ export const auth = (passport: passport.PassportStatic) => {
     callbackURL: CREDENTIALS.redirect_uris[0]
   };
   console.log('strategyOptions: ', strategyOptions);
-  // passport.use(new GoogleOAuthStrategy(
-  //     {
-  //       clientID: CREDENTIALS.client_id,
-  //       clientSecret: CREDENTIALS.client_secret,
-  //       callbackURL: CREDENTIALS.redirect_uris[0]
-  //     },
-  //     (token, refreshToken, profile, done) => done(null, {profile, token})));
+  passport.use(new GoogleOAuthStrategy(
+      {
+        clientID: CREDENTIALS.client_id,
+        clientSecret: CREDENTIALS.client_secret,
+        callbackURL: CREDENTIALS.redirect_uris[0]
+      },
+      (token, refreshToken, profile, done) => done(null, {profile, token})));
 };
