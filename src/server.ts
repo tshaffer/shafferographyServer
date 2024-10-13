@@ -4,7 +4,7 @@ import session from 'express-session';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Load environment variables from .env
+dotenv.config(); // Load environment variables
 
 // Types
 interface User {
@@ -15,9 +15,9 @@ interface User {
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080; // Use port 8080
 
-// Express session configuration
+// Configure Express session
 app.use(
   session({
     secret: process.env.SESSION_SECRET as string,
@@ -30,7 +30,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Configure the Google Strategy
+// Google OAuth Strategy configuration
 passport.use(
   new GoogleStrategy(
     {
@@ -44,7 +44,6 @@ passport.use(
       profile: Profile,
       done: VerifyCallback
     ) => {
-      // In a real app, you'd find/create a user in the DB
       const user: User = { profile, accessToken, refreshToken };
       return done(null, user);
     }
@@ -61,7 +60,14 @@ passport.deserializeUser((user: User, done) => {
   done(null, user);
 });
 
-// Route: Start Google OAuth process
+// === Routes Configuration ===
+
+// Root route (http://localhost:8080/)
+app.get('/', (req: Request, res: Response) => {
+  res.send('<h1>Welcome to the Express Server!</h1><p>Try <a href="/auth/google">logging in with Google</a>.</p>');
+});
+
+// Google OAuth login route
 app.get(
   '/auth/google',
   passport.authenticate('google', {
@@ -69,24 +75,37 @@ app.get(
   })
 );
 
-// Route: Google OAuth callback
+// Google OAuth callback route
 app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req: Request, res: Response) => {
     const user = req.user as User;
-    // Redirect to client-side with the access token
-    res.redirect(`http://localhost:3000/dashboard?accessToken=${user.accessToken}`);
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard?accessToken=${user.accessToken}`);
   }
 );
 
-// Route: Logout user
+// Logout route
 app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
   req.logout((err) => {
     if (err) return next(err);
     res.redirect('/');
   });
 });
+
+// Protected route (for authenticated users only)
+app.get('/profile', ensureAuthenticated, (req: Request, res: Response) => {
+  const user = req.user as User;
+  res.json({ profile: user.profile, accessToken: user.accessToken });
+});
+
+// Middleware to ensure authentication
+function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
+}
 
 // Start the server
 app.listen(PORT, () => {
