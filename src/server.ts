@@ -71,7 +71,13 @@ app.get('/', (req: Request, res: Response) => {
 app.get(
   '/auth/google',
   passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
+    scope: [
+      'profile',
+      'email',
+      'https://www.googleapis.com/auth/photoslibrary.readonly',
+    ],
+    accessType: 'offline', // Request refresh token
+    prompt: 'consent', // Force prompt to ensure refresh token is provided
   })
 );
 
@@ -82,21 +88,50 @@ app.get(
   (req: Request, res: Response) => {
     const user = req.user as User;
 
-    // Extract access token and expiration details
     const accessToken = user.accessToken;
-    const refreshToken = user.refreshToken; // Optional, if available
-    const expiresIn = 3600; // Google access tokens are valid for 1 hour (3600 seconds)
+    const refreshToken = user.refreshToken; // Save refresh token (optional)
+    const expiresIn = 3600; // Token validity (1 hour)
 
-    // Redirect to the frontend with token information as query parameters
     const queryParams = new URLSearchParams({
       accessToken,
+      refreshToken: refreshToken || '',
       expiresIn: expiresIn.toString(),
-      refreshToken: refreshToken || '', // Optional
     }).toString();
 
+    // Redirect to client with token details
     res.redirect(`/?${queryParams}`);
   }
 );
+
+app.post('/refresh-token', async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  try {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error_description);
+    }
+
+    res.json({
+      accessToken: data.access_token,
+      expiresIn: data.expires_in,
+    });
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    res.status(500).json({ error: 'Failed to refresh token' });
+  }
+});
 
 // Logout route
 app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
