@@ -1,3 +1,4 @@
+/*
 import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db';
@@ -82,3 +83,4 @@ class App {
 }
 
 export default new App().app;
+*/
