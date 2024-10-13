@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import session from 'express-session';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
+import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables
@@ -15,7 +16,7 @@ interface User {
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 8080; // Use port 8080
+const PORT = process.env.PORT || 8080;
 
 // Configure Express session
 app.use(
@@ -30,7 +31,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Google OAuth Strategy configuration
+// Google OAuth strategy configuration
 passport.use(
   new GoogleStrategy(
     {
@@ -50,24 +51,23 @@ passport.use(
   )
 );
 
-// Serialize user into session
+// Serialize and deserialize user to/from session
 passport.serializeUser((user: User, done) => {
   done(null, user);
 });
-
-// Deserialize user from session
 passport.deserializeUser((user: User, done) => {
   done(null, user);
 });
 
-// === Routes Configuration ===
+// Serve static files from the /public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Root route (http://localhost:8080/)
+// Serve the SPA on the root route (index.html)
 app.get('/', (req: Request, res: Response) => {
-  res.send('<h1>Welcome to the Express Server!</h1><p>Try <a href="/auth/google">logging in with Google</a>.</p>');
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// Google OAuth login route
+// OAuth login route
 app.get(
   '/auth/google',
   passport.authenticate('google', {
@@ -75,13 +75,13 @@ app.get(
   })
 );
 
-// Google OAuth callback route
+// OAuth callback route
 app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req: Request, res: Response) => {
     const user = req.user as User;
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/dashboard?accessToken=${user.accessToken}`);
+    res.redirect(`/?accessToken=${user.accessToken}`);
   }
 );
 
@@ -93,17 +93,9 @@ app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Protected route (for authenticated users only)
-app.get('/profile', ensureAuthenticated, (req: Request, res: Response) => {
-  const user = req.user as User;
-  res.json({ profile: user.profile, accessToken: user.accessToken });
-});
-
-// Middleware to ensure authentication
+// Middleware to ensure user is authenticated
 function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
+  if (req.isAuthenticated()) return next();
   res.redirect('/');
 }
 
