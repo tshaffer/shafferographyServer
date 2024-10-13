@@ -48,7 +48,8 @@
   },
   "scripts": {
     "build": "./node_modules/typescript/bin/tsc",
-    "start": "NODE_ENV=production node dist/server.js"
+    "start": "NODE_ENV=production node dist/server.js",
+    "star": "ts-node src/server.ts"
   },
   "author": "Ted",
   "license": "ISC"

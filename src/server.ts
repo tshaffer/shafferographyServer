@@ -81,7 +81,20 @@ app.get(
   passport.authenticate('google', { failureRedirect: '/' }),
   (req: Request, res: Response) => {
     const user = req.user as User;
-    res.redirect(`/?accessToken=${user.accessToken}`);
+
+    // Extract access token and expiration details
+    const accessToken = user.accessToken;
+    const refreshToken = user.refreshToken; // Optional, if available
+    const expiresIn = 3600; // Google access tokens are valid for 1 hour (3600 seconds)
+
+    // Redirect to the frontend with token information as query parameters
+    const queryParams = new URLSearchParams({
+      accessToken,
+      expiresIn: expiresIn.toString(),
+      refreshToken: refreshToken || '', // Optional
+    }).toString();
+
+    res.redirect(`/?${queryParams}`);
   }
 );
 
