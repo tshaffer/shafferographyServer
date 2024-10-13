@@ -28,12 +28,16 @@ import {
   redownloadMediaItemEndpoint,
   getLocalDriveImportFolders,
   importFromLocalStorageEndpoint,
+  authenticate,
 } from '../controllers';
 import { createPhotosToDisplaySpec } from '../utilities/utilities';
+
+export let globalApp: express.Application;
 
 export class Routes {
 
   public routes(app: express.Application): void {
+    globalApp = app;
     this.createRoutes(app);
   }
 
@@ -57,6 +61,8 @@ export class Routes {
 
     app.get('/api/v1/localDriveImportFolders', getLocalDriveImportFolders);
 
+    app.get('/api/v1/authenticate', authenticate);
+
     app.post('/api/v1/deleteMediaItems', deleteMediaItems);
     app.post('/api/v1/clearDeletedMediaItems', clearDeletedMediaItems);
     app.post('/api/v1/removeDeletedMediaItem', removeDeletedMediaItem);
@@ -77,5 +83,6 @@ export class Routes {
     app.post('/api/v1/importFromLocalStorage', importFromLocalStorageEndpoint);
 
     app.post('/api/v1/redownloadMediaItem', redownloadMediaItemEndpoint);
+
   }
 }

@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import passport from 'passport';
+import express from 'express';
 
 import * as fs from 'fs';
 import { promisify } from 'util';
@@ -278,7 +280,60 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
   console.log('fullPath:', fullPath);
 
   await importFromLocalStorage(fullPath);
-  
+
   response.sendStatus(200);
 }
+
+import { globalApp } from '../routes/routes';
+
+export const authenticate = async (request: Request, response: Response, next: any) => {
+  console.log('authenticate entry');
+
+  const scopes: string[] = [
+    'https://www.googleapis.com/auth/photoslibrary.readonly',
+    'profile',
+  ];
+
+  // const retVal = passport.authenticate('google', {
+  //   scope: scopes,
+  //   failureFlash: true,  // Display errors to the user.
+  //   session: true,
+  // });
+
+  globalApp.get('/auth/google', passport.authenticate('google', {
+    scope: scopes,
+    failureFlash: true,  // Display errors to the user.
+    session: true,
+  }));
+
+  globalApp.get(
+    '/auth/google/callback',
+    passport.authenticate(
+      'google', { failureRedirect: '/', failureFlash: true, session: true }),
+    (req, res) => {
+      // User has logged in.
+      console.log('User has logged in.');
+    });
+
+
+  response.status(200).send();
+
+  /*
+  
+  app.get('/protected', function(req, res, next) {
+    passport.authenticate('local', function(err, user, info, status) {
+      if (err) { return next(err) }
+      if (!user) { return res.redirect('/signin') }
+      res.redirect('/account');
+    })(req, res, next);
+  });
+  
+  app.get('/auth/google', passport.authenticate('google', {
+    scope: config.scopes,
+    failureFlash: true,  // Display errors to the user.
+    session: true,
+  }));
+  
+  */
+};
 

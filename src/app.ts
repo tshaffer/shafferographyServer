@@ -43,7 +43,33 @@ class App {
 
     // Set up passport and session handling.
     this.app.use(passport.initialize());
+    this.app.use(passport.session());
 
+    const scopes: string[] = [
+      'https://www.googleapis.com/auth/photoslibrary.readonly',
+      'profile',
+    ];
+  
+    this.app.get('/auth/google', passport.authenticate('google', {
+      scope: scopes,
+      failureFlash: true,  // Display errors to the user.
+      session: true,
+    }));
+    
+    this.app.get(
+      '/auth/google/callback',
+      passport.authenticate(
+          'google', {failureRedirect: '/', failureFlash: true, session: true}),
+      (req, res) => {
+        // User has logged in.
+        console.log('User has logged in.');
+        // logger.info('User has logged in.');
+        // req.session.save(() => {
+        //   res.redirect('/');
+        // });
+      });
+  
+  
   }
 
   private config(): void {
