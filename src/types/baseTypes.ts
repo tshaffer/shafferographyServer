@@ -1,11 +1,6 @@
 import { MediaItem } from "entities";
 import { Tags } from "exiftool-vendored";
 
-export interface ShafferographyConfiguration {
-  PORT: number;
-  MONGO_URI: string;
-}
-
 export type StringToStringLUT = {
   [key: string]: string;
 }
