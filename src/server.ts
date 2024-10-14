@@ -4,10 +4,13 @@ import session from 'express-session';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import path from 'path';
 import dotenv from 'dotenv';
+import connectDB from './config/db';
 import { Server } from 'http';
 import { createRoutes } from './routes';
 
 dotenv.config(); // Load environment variables
+
+connectDB();
 
 // Types
 interface User {
