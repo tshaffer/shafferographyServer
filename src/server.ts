@@ -4,6 +4,8 @@ import session from 'express-session';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import path from 'path';
 import dotenv from 'dotenv';
+import { Server } from 'http';
+import { createRoutes } from './routes';
 
 dotenv.config(); // Load environment variables
 
@@ -17,6 +19,9 @@ interface User {
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// add routes
+createRoutes(app);
 
 // Configure Express session
 app.use(
@@ -148,6 +153,12 @@ function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
 }
 
 // Start the server
-app.listen(PORT, () => {
+const server: Server<any> = app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
+});
+
+process.on('unhandledRejection', (err: any, promise: any) => {
+  console.log(`Error: ${err.message}`);
+  // Close server and exit process
+  server.close(() => process.exit(1));
 });
