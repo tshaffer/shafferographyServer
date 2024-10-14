@@ -113,36 +113,36 @@ app.get(
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
     try {
-      const user = req.user as any; // Extract user from request (via Passport)
-      const googleId = user.profile.id; // Get Google ID from the user's profile
-      const email = user.profile.emails[0].value; // Extract email
+      // Use the structure of req.user directly (no profile field)
+      const { googleId, email, accessToken, refreshToken } = req.user as any;
 
-      const accessToken = user.accessToken; // Access token from OAuth response
-      const refreshToken = user.refreshToken; // Retrieve refresh token
+      if (!googleId || !email) {
+        throw new Error('Missing user information from OAuth response');
+      }
 
       if (refreshToken) {
-        // Encrypt the refresh token before storing it in the database
+        // Encrypt the refresh token before storing it
         const encryptedRefreshToken = encrypt(refreshToken);
 
         // Upsert the user in the database (create if not exists, update otherwise)
         updateUserInDb(googleId, {
+          googleId,
           email,
           refreshToken: encryptedRefreshToken
         });
       } else {
-        console.warn('No refresh token received. Check if accessType: "offline" is set.');
+        console.warn('No refresh token received. Ensure accessType: "offline" is set.');
       }
 
-      const expiresIn = 3600; // Access token expiration (1 hour)
+      const expiresIn = 3600; // Token expiration (1 hour)
 
-      // Include googleId, accessToken, and expiresIn in the query params
+      // Redirect the user back to the client with access token and googleId
       const queryParams = new URLSearchParams({
         accessToken,
         expiresIn: expiresIn.toString(),
         googleId,
       }).toString();
 
-      // Redirect the user back to the client with token details
       res.redirect(`/?${queryParams}`);
     } catch (error) {
       console.error('OAuth callback error:', error);
