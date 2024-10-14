@@ -96,46 +96,42 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
-    const user = req.user as any; // Assuming user contains Google profile data
+    const user = req.user as any;
 
-    // Encrypt the refresh token before storing
-    const encryptedRefreshToken = encrypt(user.refreshToken);
+    const accessToken = user.accessToken;
+    const refreshToken = user.refreshToken; // Keep this on the server
+    const expiresIn = 3600; // 1 hour expiration
 
-    // Check if the user already exists in the database
-    let existingUser = await User.findOne({ googleId: user.profile.id });
+    // Encrypt and store the refresh token securely
+    const encryptedRefreshToken = encrypt(refreshToken);
+    await User.findOneAndUpdate(
+      { googleId: user.profile.id },
+      { refreshToken: encryptedRefreshToken },
+      { upsert: true }
+    );
 
-    if (existingUser) {
-      // Update the refresh token if the user already exists
-      existingUser.refreshToken = encryptedRefreshToken;
-      await existingUser.save();
-    } else {
-      // Create a new user record
-      const newUser = new User({
-        googleId: user.profile.id,
-        email: user.profile.emails[0].value,
-        refreshToken: encryptedRefreshToken,
-      });
-      await newUser.save();
-    }
+    // Send only the access token and expiration time to the client
+    const queryParams = new URLSearchParams({
+      accessToken,
+      expiresIn: expiresIn.toString(),
+    }).toString();
 
-    // Redirect to the client with a success message
-    res.redirect('/');
+    // Redirect the user back to the client with token details
+    res.redirect(`/?${queryParams}`);
   }
 );
 
-
 app.post('/refresh-token', async (req: Request, res: Response) => {
-  const { googleId } = req.body;
+  const { googleId } = req.body; // Identify the user requesting the token
 
   try {
-    // Find the user in the database
+    // Retrieve and decrypt the stored refresh token
     const user = await User.findOne({ googleId });
     if (!user) {
       res.status(404).send('User not found');
       return;
     }
 
-    // Decrypt the refresh token
     const decryptedRefreshToken = decrypt(user.refreshToken);
 
     // Use the refresh token to get a new access token
@@ -153,10 +149,14 @@ app.post('/refresh-token', async (req: Request, res: Response) => {
     const data = await response.json();
     if (data.error) throw new Error(data.error_description);
 
-    res.json({ accessToken: data.access_token, expiresIn: data.expires_in });
+    // Send the new access token and expiration time to the client
+    res.json({
+      accessToken: data.access_token,
+      expiresIn: data.expires_in,
+    });
   } catch (error) {
-    console.error('Error refreshing token:', error);
-    res.status(500).send('Failed to refresh token');
+    console.error('Failed to refresh token:', error);
+    res.status(500).json({ error: 'Failed to refresh token' });
   }
 });
 

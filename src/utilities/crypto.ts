@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'defaultencryptionkey'; // Must be 32 bytes
+console.log('ENCRYPTION_KEY', ENCRYPTION_KEY);
+
 const IV_LENGTH = 16; // For AES, the initialization vector size is 16 bytes
 
 export function encrypt(text: string): string {
