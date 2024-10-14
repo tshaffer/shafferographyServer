@@ -11,7 +11,7 @@ async function connectDB() {
     useCreateIndex: true,
     useFindAndModify: false,
   });
-  console.log(`MongoDB new db connected`);
+  console.log(`MongoDB db connected`);
 
   mongoose.Promise = global.Promise;
 };

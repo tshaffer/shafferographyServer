@@ -7,15 +7,15 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import { Server } from 'http';
 import { createRoutes } from './routes';
-import User from './models/User';
 import { decrypt, encrypt } from './utilities/crypto';
+import { User } from './types';
 
 dotenv.config(); // Load environment variables
 
 connectDB();
 
 // Types
-interface User {
+interface OAuthUser {
   profile: Profile;
   accessToken: string;
   refreshToken: string;
@@ -55,17 +55,17 @@ passport.use(
       profile: Profile,
       done: VerifyCallback
     ) => {
-      const user: User = { profile, accessToken, refreshToken };
+      const user: OAuthUser = { profile, accessToken, refreshToken };
       return done(null, user);
     }
   )
 );
 
 // Serialize and deserialize user to/from session
-passport.serializeUser((user: User, done) => {
+passport.serializeUser((user: OAuthUser, done) => {
   done(null, user);
 });
-passport.deserializeUser((user: User, done) => {
+passport.deserializeUser((user: OAuthUser, done) => {
   done(null, user);
 });
 
@@ -105,11 +105,21 @@ app.get(
 
     // Encrypt and store the refresh token securely in the database
     const encryptedRefreshToken = encrypt(refreshToken);
-    await User.findOneAndUpdate(
-      { googleId },
-      { refreshToken: encryptedRefreshToken },
-      { upsert: true }
-    );
+
+    const shafferographyUser: User = {
+      googleId,
+      refreshToken: encryptedRefreshToken,
+      expiresIn,
+    };
+  
+    // updateUserInDb = async (user: User)
+
+
+    // await User.findOneAndUpdate(
+    //   { googleId },
+    //   { refreshToken: encryptedRefreshToken },
+    //   { upsert: true }
+    // );
 
     // Include googleId in the query parameters sent to the client
     const queryParams = new URLSearchParams({
@@ -161,59 +171,6 @@ app.post('/refresh-token', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to refresh token' });
   }
 });
-
-/*
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req: Request, res: Response) => {
-    const user = req.user as User;
-
-    const accessToken = user.accessToken;
-    const refreshToken = user.refreshToken; // Save refresh token (optional)
-    const expiresIn = 3600; // Token validity (1 hour)
-
-    const queryParams = new URLSearchParams({
-      accessToken,
-      refreshToken: refreshToken || '',
-      expiresIn: expiresIn.toString(),
-    }).toString();
-
-    // Redirect to client with token details
-    res.redirect(`/?${queryParams}`);
-  }
-);
-
-app.post('/refresh-token', async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
-
-  try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        refresh_token: refreshToken,
-        grant_type: 'refresh_token',
-      }),
-    });
-
-    const data = await response.json();
-    if (data.error) {
-      throw new Error(data.error_description);
-    }
-
-    res.json({
-      accessToken: data.access_token,
-      expiresIn: data.expires_in,
-    });
-  } catch (error) {
-    console.error('Failed to refresh token:', error);
-    res.status(500).json({ error: 'Failed to refresh token' });
-  }
-});
-*/
 
 // Logout route
 app.get('/logout', (req: Request, res: Response, next: NextFunction) => {

@@ -6,6 +6,7 @@ import {
   getKeywordNodeModel,
   getKeywordTreeModel,
   getMediaitemModel,
+  getUserModel,
 } from '../models';
 import {
   MediaItem,
@@ -18,6 +19,7 @@ import {
   DateSearchRule,
   Takeout,
   KeywordData,
+  User,
 } from '../types';
 import { Document } from 'mongoose';
 import { getPhotosToDisplaySpecModel } from '../models/PhotosToDisplaySpec';
@@ -353,6 +355,14 @@ export const updateKeywordNodeDb = async (keywordNode: KeywordNode): Promise<any
   const keywordNodeModel = getKeywordNodeModel();
   const filter = { nodeId: keywordNode.nodeId };
   const updatedDoc = await keywordNodeModel.findOneAndUpdate(filter, keywordNode, {
+    new: true,
+  }).exec();
+}
+
+export const updateUserInDb = async (user: User): Promise<any> => {
+  const userModel = getUserModel();
+  const filter = { googleId: user.googleId };
+  const updatedDoc = await userModel.findOneAndUpdate(filter, user, {
     new: true,
   }).exec();
 }

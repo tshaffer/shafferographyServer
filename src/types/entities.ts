@@ -94,3 +94,9 @@ export interface AddedTakeoutData {
   addedKeywordData: KeywordData;
   addedMediaItems: MediaItem[];
 }
+
+export interface User {
+  googleId: string;
+  email: string;
+  refreshToken: string;
+}
