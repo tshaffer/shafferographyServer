@@ -359,10 +359,22 @@ export const updateKeywordNodeDb = async (keywordNode: KeywordNode): Promise<any
   }).exec();
 }
 
-export const updateUserInDb = async (user: User): Promise<any> => {
+export const getUserFromDb = async (googleId: string): Promise<User> => {
   const userModel = getUserModel();
-  const filter = { googleId: user.googleId };
-  const updatedDoc = await userModel.findOneAndUpdate(filter, user, {
+  const filter = { googleId };
+  const userDocument: Document = await userModel.findOne(filter);
+  if (!isNil(userDocument)) {
+    const user: User = userDocument.toObject() as User;
+    return user;
+  }
+  return null;
+}
+
+export const updateUserInDb = async (googleId: string, update: Object): Promise<any> => {
+  const userModel = getUserModel();
+  const filter = { googleId };
+  const updatedDoc = await userModel.findOneAndUpdate(filter, update, {
+    upsert: true,
     new: true,
   }).exec();
 }

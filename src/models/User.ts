@@ -6,8 +6,8 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema(
   {
     googleId: { type: String, required: true },
+    email: { type: String, required: true },
     refreshToken: { type: String, required: true },
-    expiresIn: { type: String, required: true },
   }
 );
 

@@ -8,6 +8,7 @@ import connectDB from './config/db';
 import { Server } from 'http';
 import { createRoutes } from './routes';
 import { decrypt, encrypt } from './utilities/crypto';
+import { getUserFromDb, updateUserInDb } from './controllers';
 import { User } from './types';
 
 dotenv.config(); // Load environment variables
@@ -34,6 +35,7 @@ app.use(
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: true,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // 1 day
   })
 );
 
@@ -45,28 +47,46 @@ app.use(passport.session());
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
+      clientID: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL!,
     },
-    async (
-      accessToken: string,
-      refreshToken: string,
-      profile: Profile,
-      done: VerifyCallback
-    ) => {
-      const user: OAuthUser = { profile, accessToken, refreshToken };
-      return done(null, user);
+    async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
+      try {
+        // Encrypt the refresh token before storing it in the database
+        const encryptedRefreshToken = encrypt(refreshToken);
+
+        // Find the user by Google ID and update or create the record
+        updateUserInDb(profile.id,
+          { email: profile.emails[0].value, refreshToken: encryptedRefreshToken },
+        );
+
+        const user: User = {
+          googleId: profile.id,
+          email: profile.emails[0].value,
+          refreshToken: encryptedRefreshToken
+        };
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
     }
   )
 );
 
-// Serialize and deserialize user to/from session
-passport.serializeUser((user: OAuthUser, done) => {
-  done(null, user);
+// Serialize and deserialize user
+passport.serializeUser((user: any, done) => {
+  done(null, user.googleId);
 });
-passport.deserializeUser((user: OAuthUser, done) => {
-  done(null, user);
+
+passport.deserializeUser(async (googleId: string, done) => {
+  try {
+    const user: User = await getUserFromDb(googleId);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
 });
 
 // Serve static files from the /public directory
@@ -81,13 +101,9 @@ app.get('/', (req: Request, res: Response) => {
 app.get(
   '/auth/google',
   passport.authenticate('google', {
-    scope: [
-      'profile',
-      'email',
-      'https://www.googleapis.com/auth/photoslibrary.readonly',
-    ],
+    scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
     accessType: 'offline', // Request refresh token
-    prompt: 'consent', // Force prompt to ensure refresh token is provided
+    prompt: 'consent', // Force consent to get the refresh token on first login
   })
 );
 
@@ -96,57 +112,59 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
-    const user = req.user as any; // User object from OAuth profile
-    const googleId = user.profile.id; // Extract Google ID
+    try {
+      const user = req.user as any; // Extract user from request (via Passport)
+      const googleId = user.profile.id; // Get Google ID from the user's profile
+      const email = user.profile.emails[0].value; // Extract email
 
-    const accessToken = user.accessToken;
-    const refreshToken = user.refreshToken; // Save on the server
-    const expiresIn = 3600; // Token expiration (in seconds)
+      const accessToken = user.accessToken; // Access token from OAuth response
+      const refreshToken = user.refreshToken; // Retrieve refresh token
 
-    // Encrypt and store the refresh token securely in the database
-    const encryptedRefreshToken = encrypt(refreshToken);
+      if (refreshToken) {
+        // Encrypt the refresh token before storing it in the database
+        const encryptedRefreshToken = encrypt(refreshToken);
 
-    const shafferographyUser: User = {
-      googleId,
-      refreshToken: encryptedRefreshToken,
-      expiresIn,
-    };
-  
-    // updateUserInDb = async (user: User)
+        // Upsert the user in the database (create if not exists, update otherwise)
+        updateUserInDb(googleId, {
+          email,
+          refreshToken: encryptedRefreshToken
+        });
+      } else {
+        console.warn('No refresh token received. Check if accessType: "offline" is set.');
+      }
 
+      const expiresIn = 3600; // Access token expiration (1 hour)
 
-    // await User.findOneAndUpdate(
-    //   { googleId },
-    //   { refreshToken: encryptedRefreshToken },
-    //   { upsert: true }
-    // );
+      // Include googleId, accessToken, and expiresIn in the query params
+      const queryParams = new URLSearchParams({
+        accessToken,
+        expiresIn: expiresIn.toString(),
+        googleId,
+      }).toString();
 
-    // Include googleId in the query parameters sent to the client
-    const queryParams = new URLSearchParams({
-      accessToken,
-      expiresIn: expiresIn.toString(),
-      googleId, // Send Google ID to the client
-    }).toString();
-
-    // Redirect to the client with token details and Google ID
-    res.redirect(`/?${queryParams}`);
+      // Redirect the user back to the client with token details
+      res.redirect(`/?${queryParams}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.status(500).send('Authentication failed');
+    }
   }
 );
 
+// Refresh Token Endpoint
 app.post('/refresh-token', async (req: Request, res: Response) => {
-  const { googleId } = req.body; // Identify the user requesting the token
+  const { googleId } = req.body;
 
   try {
-    // Retrieve and decrypt the stored refresh token
-    const user = await User.findOne({ googleId });
+    // Retrieve and decrypt the refresh token from the database
+    const user = await getUserFromDb(googleId);
     if (!user) {
       res.status(404).send('User not found');
       return;
     }
-
     const decryptedRefreshToken = decrypt(user.refreshToken);
 
-    // Use the refresh token to get a new access token
+    // Use the refresh token to get a new access token from Google
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -161,21 +179,20 @@ app.post('/refresh-token', async (req: Request, res: Response) => {
     const data = await response.json();
     if (data.error) throw new Error(data.error_description);
 
-    // Send the new access token and expiration time to the client
-    res.json({
-      accessToken: data.access_token,
-      expiresIn: data.expires_in,
-    });
+    res.json({ accessToken: data.access_token, expiresIn: data.expires_in });
   } catch (error) {
     console.error('Failed to refresh token:', error);
     res.status(500).json({ error: 'Failed to refresh token' });
   }
 });
 
-// Logout route
-app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
+// Logout Route
+app.get('/logout', (req: Request, res: Response) => {
   req.logout((err) => {
-    if (err) return next(err);
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).send('Logout failed');
+    }
     res.redirect('/');
   });
 });
