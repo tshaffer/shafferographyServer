@@ -96,27 +96,29 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
-    const user = req.user as any;
+    const user = req.user as any; // User object from OAuth profile
+    const googleId = user.profile.id; // Extract Google ID
 
     const accessToken = user.accessToken;
-    const refreshToken = user.refreshToken; // Keep this on the server
-    const expiresIn = 3600; // 1 hour expiration
+    const refreshToken = user.refreshToken; // Save on the server
+    const expiresIn = 3600; // Token expiration (in seconds)
 
-    // Encrypt and store the refresh token securely
+    // Encrypt and store the refresh token securely in the database
     const encryptedRefreshToken = encrypt(refreshToken);
     await User.findOneAndUpdate(
-      { googleId: user.profile.id },
+      { googleId },
       { refreshToken: encryptedRefreshToken },
       { upsert: true }
     );
 
-    // Send only the access token and expiration time to the client
+    // Include googleId in the query parameters sent to the client
     const queryParams = new URLSearchParams({
       accessToken,
       expiresIn: expiresIn.toString(),
+      googleId, // Send Google ID to the client
     }).toString();
 
-    // Redirect the user back to the client with token details
+    // Redirect to the client with token details and Google ID
     res.redirect(`/?${queryParams}`);
   }
 );
