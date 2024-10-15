@@ -1,45 +1,36 @@
 import express, { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
 import session from 'express-session';
 import passport from 'passport';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import cookieParser from 'cookie-parser'; // Parse cookies
 import dotenv from 'dotenv';
-import User from './models/User'; // User model
-import { encrypt, decrypt } from './utils/encryption'; // Encryption utilities
+import { User, UserWithToken } from './types';
+import { decrypt, encrypt } from './utilities/crypto';
+import { createRoutes } from './routes';
+import { getUserFromDb, updateUserInDb } from './controllers';
+import path from 'path';
+import { Server } from 'http';
 
 dotenv.config(); // Load environment variables
 
+// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/myDatabase';
+
+// add routes
+createRoutes(app);
 
 // === Middleware Setup ===
 app.use(cookieParser());
 app.use(express.json()); // Parse JSON requests
 
-// === Mongoose Setup ===
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  connectTimeoutMS: 10000,
-});
-
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose connected to the database.');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
 // === Express Session Setup ===
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 },
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // 1 day
   })
 );
 
@@ -61,16 +52,16 @@ passport.use(
 
         const encryptedRefreshToken = encrypt(refreshToken);
 
-        const user = await User.findOneAndUpdate(
-          { googleId: profile.id },
+        updateUserInDb(profile.id,
           { email: profile.emails[0].value, refreshToken: encryptedRefreshToken },
-          { upsert: true, new: true }
         );
 
-        const userWithToken = {
-          ...user.toObject(),
+        const userWithToken: UserWithToken = {
+          googleId: profile.id,
+          email: profile.emails[0].value,
+          refreshToken: encryptedRefreshToken,
           accessToken,
-        };
+        }
 
         return done(null, userWithToken);
       } catch (error) {
@@ -86,7 +77,7 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (googleId: string, done) => {
   try {
-    const user = await User.findOne({ googleId });
+    const user: User = await getUserFromDb(googleId);
     done(null, user);
   } catch (error) {
     done(error, null);
@@ -94,6 +85,14 @@ passport.deserializeUser(async (googleId: string, done) => {
 });
 
 // === Routes ===
+
+// Serve static files from the /public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve the SPA on the root route (index.html)
+app.get('/', (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
 
 // OAuth Login Route
 app.get(
@@ -138,7 +137,8 @@ app.get('/auth/token', (req: Request, res: Response) => {
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    return res.status(401).json({ error: 'Access token not found' });
+    res.status(401).json({ error: 'Access token not found' });
+    return;
   }
 
   res.json({ accessToken });
@@ -149,8 +149,11 @@ app.post('/refresh-token', async (req: Request, res: Response) => {
   const { googleId } = req.body;
 
   try {
-    const user = await User.findOne({ googleId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await getUserFromDb(googleId);
+    if (!user) {
+      res.status(404).send('User not found');
+      return;
+    }
 
     const decryptedRefreshToken = decrypt(user.refreshToken);
 
@@ -200,7 +203,13 @@ function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   res.redirect('/');
 }
 
-// Start the Server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Start the server
+const server: Server<any> = app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
+
+process.on('unhandledRejection', (err: any, promise: any) => {
+  console.log(`Error: ${err.message}`);
+  // Close server and exit process
+  server.close(() => process.exit(1));
 });
