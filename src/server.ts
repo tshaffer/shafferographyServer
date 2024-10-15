@@ -10,8 +10,11 @@ import { createRoutes } from './routes';
 import { getUserFromDb, updateUserInDb } from './controllers';
 import path from 'path';
 import { Server } from 'http';
+import connectDB from './config/db';
 
 dotenv.config(); // Load environment variables
+
+connectDB();
 
 // Initialize Express app
 const app = express();
