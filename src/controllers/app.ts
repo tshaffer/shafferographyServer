@@ -187,9 +187,10 @@ export const addTakeout = async (request: Request, response: Response, next: any
 }
 
 export const importFromTakeoutEndpoint = async (request: Request, response: Response, next: any) => {
-  const { id } = request.body;
+  const { id, googleAccessToken } = request.body;
+  console.log('importFromTakeoutEndpoint', id, googleAccessToken);
   const takeout: Takeout = await getTakeoutById(id);
-  const addedTakeoutData: AddedTakeoutData = await importFromTakeout(takeout.albumName, takeout.path);
+  const addedTakeoutData: AddedTakeoutData = await importFromTakeout(googleAccessToken, takeout.albumName, takeout.path);
   response.json(addedTakeoutData);
 }
 

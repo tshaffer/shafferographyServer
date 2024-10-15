@@ -1,7 +1,8 @@
 import { GoogleAlbum, GoogleMediaItem } from "../types";
 import { AuthService } from "../auth";
-import { isArray, isNil } from 'lodash';
+import { isArray, isEmpty, isNil, isString } from 'lodash';
 import { getRequest, postRequest } from './googleUtils';
+import axios from "axios";
 
 export const GooglePhotoAPIs = {
   mediaItem: 'https://photoslibrary.googleapis.com/v1/mediaItems/',
@@ -107,9 +108,12 @@ export const getAlbumMediaItemsFromGoogle = async (authService: AuthService, alb
   return googleMediaItems;
 }
 
-export const getGoogleAlbumDataByName = async (authService: AuthService, albumName: string): Promise<GoogleAlbum | null> => {
+export const getGoogleAlbumDataByName = async (googleAccessToken: string, albumName: string): Promise<GoogleAlbum | null> => {
 
-  const googleAlbums: GoogleAlbum[] = await getAllGoogleAlbums(authService);
+  console.log('getGoogleAlbumDataByName');
+  console.log('googleAccessToken: ', googleAccessToken);
+
+  const googleAlbums: GoogleAlbum[] = await getAllGoogleAlbums(googleAccessToken);
 
   for (const googleAlbum of googleAlbums) {
     if (googleAlbum.title === albumName) {
@@ -120,8 +124,11 @@ export const getGoogleAlbumDataByName = async (authService: AuthService, albumNa
   return null;
 }
 
-export const getAllGoogleAlbums = async (authService: AuthService, nextPageToken: any = null): Promise<GoogleAlbum[]> => {
+export const getAllGoogleAlbums = async (googleAccessToken: string, nextPageToken: any = null): Promise<GoogleAlbum[]> => {
 
+  console.log('getAllGoogleAlbums');
+  console.log('googleAccessToken: ', googleAccessToken);
+  
   const googleAlbums: GoogleAlbum[] = [];
 
   let url = GooglePhotoAPIs.albums;
@@ -132,27 +139,45 @@ export const getAllGoogleAlbums = async (authService: AuthService, nextPageToken
       url = `${GooglePhotoAPIs.albums}?pageToken=${nextPageToken}`;
     }
 
-    try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + googleAccessToken
+    };
+    await axios.get(
+      url,
+      {
+        headers,
+      })
+      .then((response) => {
+        const body: any = response.data;
+        console.log('body: ');
+        console.log(body);
+      })
+      .catch((err) => {
+        debugger;
+      });
 
-      const response: any = await getRequest(authService, url);
-      if (!isNil(response)) {
-        if (isArray(response.albums)) {
-          response.albums.forEach((album: any) => {
-            googleAlbums.push(album);
-          });
-        }
-        else {
-          console.log('response.albums is not array');
-        }
-        nextPageToken = response.nextPageToken;
-      }
-      else {
-        console.log('response is nil');
-      }
+    // try {
 
-    } catch (err) {
-      nextPageToken = null;
-    }
+    //   const response: any = await getRequest(authService, url);
+    //   if (!isNil(response)) {
+    //     if (isArray(response.albums)) {
+    //       response.albums.forEach((album: any) => {
+    //         googleAlbums.push(album);
+    //       });
+    //     }
+    //     else {
+    //       console.log('response.albums is not array');
+    //     }
+    //     nextPageToken = response.nextPageToken;
+    //   }
+    //   else {
+    //     console.log('response is nil');
+    //   }
+
+    // } catch (err) {
+    //   nextPageToken = null;
+    // }
   } while (nextPageToken != null);
 
   return googleAlbums;

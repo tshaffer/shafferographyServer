@@ -22,19 +22,21 @@ const getAlbumItems = async (authService: AuthService, albumId: string): Promise
 //  input parameters
 //    albumName - corresponding to takeout file
 //    takeoutFolder - folder containing metadata for the files retrieved from a single takeout
-export const importFromTakeout = async (albumName: string, takeoutFolder: string): Promise<AddedTakeoutData> => {
+export const importFromTakeout = async (googleAccessToken: string, albumName: string, takeoutFolder: string): Promise<AddedTakeoutData> => {
 
   console.log('importFromTakeout');
+  console.log('googleAccessToken: ', googleAccessToken);
+  
 
   // Step 0
   // connect to db; acquire authService
-  if (isNil(authService)) {
-    authService = await getAuthService();
-  }
+  // if (isNil(authService)) {
+  //   authService = await getAuthService();
+  // }
 
   // Step 1
   // get the google album metadata for named album
-  const googleAlbum: GoogleAlbum | null = await getGoogleAlbumDataByName(authService, albumName);
+  const googleAlbum: GoogleAlbum | null = await getGoogleAlbumDataByName(googleAccessToken, albumName);
   if (isNil(googleAlbum)) {
     // TEDTODO
     // if album does not exist, inform user and return
