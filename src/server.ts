@@ -9,7 +9,7 @@ import { Server } from 'http';
 import { createRoutes } from './routes';
 import { decrypt, encrypt } from './utilities/crypto';
 import { getUserFromDb, updateUserInDb } from './controllers';
-import { User } from './types';
+import { User, UserWithToken } from './types';
 
 dotenv.config(); // Load environment variables
 
@@ -53,21 +53,26 @@ passport.use(
     },
     async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
       try {
-        // Encrypt the refresh token before storing it in the database
+        console.log('AccessToken:', accessToken);
+        console.log('RefreshToken:', refreshToken);
+
+        // Encrypt the refresh token before storing it
         const encryptedRefreshToken = encrypt(refreshToken);
 
-        // Find the user by Google ID and update or create the record
+        // Find or create the user in the database
         updateUserInDb(profile.id,
           { email: profile.emails[0].value, refreshToken: encryptedRefreshToken },
         );
 
-        const user: User = {
+        // Attach the access token to the user object (only for immediate use)
+        const userWithToken: UserWithToken = {
           googleId: profile.id,
           email: profile.emails[0].value,
-          refreshToken: encryptedRefreshToken
-        };
+          refreshToken: encryptedRefreshToken,
+          accessToken,
+        }
 
-        return done(null, user);
+        return done(null, userWithToken); // Pass user with access token
       } catch (error) {
         return done(error, null);
       }
@@ -137,6 +142,102 @@ app.get(
       const expiresIn = 3600; // Token expiration (1 hour)
 
       // Redirect the user back to the client with access token and googleId
+      const queryParams = new URLSearchParams({
+        accessToken,
+        expiresIn: expiresIn.toString(),
+        googleId,
+      }).toString();
+
+      res.redirect(`/?${queryParams}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.status(500).send('Authentication failed');
+    }
+  }
+);
+
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any; // Extract user from the request
+
+      // Access the temporary access token from the user object
+      const { googleId, email, accessToken } = user;
+
+      const expiresIn = 3600; // Token expiration (1 hour)
+
+      // Redirect to client with token and user info
+      const queryParams = new URLSearchParams({
+        accessToken,
+        expiresIn: expiresIn.toString(),
+        googleId,
+      }).toString();
+
+      res.redirect(`/?${queryParams}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.status(500).send('Authentication failed');
+    }
+  }
+);
+
+// app.get(
+//   '/auth/google/callback',
+//   passport.authenticate('google', { failureRedirect: '/' }),
+//   async (req: Request, res: Response) => {
+//     try {
+//       const { googleId, email, accessToken, refreshToken } = req.user as any;
+
+//       if (!googleId || !email) {
+//         throw new Error('Missing user information from OAuth response');
+//       }
+
+//       if (refreshToken) {
+//         const encryptedRefreshToken = encrypt(refreshToken);
+
+//         // Upsert the user in the database
+//         await User.findOneAndUpdate(
+//           { googleId },
+//           { email, refreshToken: encryptedRefreshToken },
+//           { upsert: true, new: true }
+//         );
+//       } else {
+//         console.warn('No refresh token received. Ensure accessType: "offline" is set.');
+//       }
+
+//       const expiresIn = 3600;
+
+//       // Store access token in a secure HTTP-only cookie
+//       res.cookie('accessToken', accessToken, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === 'production', // Send only over HTTPS in production
+//         maxAge: expiresIn * 1000, // 1 hour in milliseconds
+//       });
+
+//       // Redirect to the client
+//       res.redirect('/');
+//     } catch (error) {
+//       console.error('OAuth callback error:', error);
+//       res.status(500).send('Authentication failed');
+//     }
+//   }
+// );
+
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any; // Extract user from the request
+
+      // Access the temporary access token from the user object
+      const { googleId, email, accessToken } = user;
+
+      const expiresIn = 3600; // Token expiration (1 hour)
+
+      // Redirect to client with token and user info
       const queryParams = new URLSearchParams({
         accessToken,
         expiresIn: expiresIn.toString(),

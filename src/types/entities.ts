@@ -100,3 +100,7 @@ export interface User {
   email: string;
   refreshToken: string;
 }
+
+export interface UserWithToken extends User {
+  accessToken: string;
+}
