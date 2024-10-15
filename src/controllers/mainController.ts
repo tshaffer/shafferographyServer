@@ -2,10 +2,7 @@ import { Request, Response } from 'express';
 import * as path from 'path';
 
 export function getIndex(request: Request, response: Response) {
-  console.log('getIndex invoked');
   const pathToIndex = path.join(__dirname, '../../public', 'index.html');
-  console.log('pathToIndex');
-  console.log(pathToIndex);
   response.sendFile(pathToIndex);
 }
 
@@ -23,16 +20,11 @@ export function getBundle(request: Request, response: Response) {
 }
 
 export function getBundleMap(request: Request, response: Response) {
-  console.log('getBundleMap invoked');
   const pathToBundleMap = path.join(__dirname, '../../public', 'build', 'bundle.js.map');
-  console.log(pathToBundleMap)
   response.sendFile(pathToBundleMap);
 }
 
 export function getImage(request: Request, response: Response) {
-  console.log('getImage invoked');
   const pathToImage = path.join(__dirname, '../../public', 'images', 'test.jpg');
-  console.log('pathToImage');
-  console.log(pathToImage);
   response.sendFile(pathToImage);
 }

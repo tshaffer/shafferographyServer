@@ -12,6 +12,15 @@ import path from 'path';
 import { Server } from 'http';
 import connectDB from './config/db';
 
+const passportAuthenticateCallback = () => {
+  console.log('passportAuthenticateCallback');
+  passport.authenticate('google', {
+    scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
+    accessType: 'offline',
+    prompt: 'consent',
+  });
+};
+
 dotenv.config(); // Load environment variables
 
 connectDB();
@@ -50,6 +59,7 @@ passport.use(
     },
     async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
       try {
+        console.log('passport.use callback');
         console.log('AccessToken:', accessToken);
         console.log('RefreshToken:', refreshToken);
 
@@ -75,10 +85,14 @@ passport.use(
 );
 
 passport.serializeUser((user: any, done) => {
+  console.log('passport.serializeUser');
+  console.log('user.googleId:', user.googleId);
   done(null, user.googleId);
 });
 
 passport.deserializeUser(async (googleId: string, done) => {
+  console.log('passport.deserializeUser');
+  console.log('googleId:', googleId);
   try {
     const user: User = await getUserFromDb(googleId);
     done(null, user);
@@ -113,7 +127,14 @@ app.get(
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
     try {
+
+      console.log('/auth/google/callback');
+
       const { googleId, email, accessToken } = req.user as any;
+
+      console.log('googleId:', googleId);
+      console.log('email:', email);
+      console.log('accessToken:', accessToken);
 
       if (!googleId || !email) {
         throw new Error('Missing user information from OAuth response');
