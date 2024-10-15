@@ -7,19 +7,12 @@ import dotenv from 'dotenv';
 import { User, UserWithToken } from './types';
 import { decrypt, encrypt } from './utilities/crypto';
 import { createRoutes } from './routes';
-import { getUserFromDb, updateUserInDb } from './controllers';
+import { addTakeout, getUserFromDb, updateUserInDb } from './controllers';
 import path from 'path';
 import { Server } from 'http';
 import connectDB from './config/db';
-
-const passportAuthenticateCallback = () => {
-  console.log('passportAuthenticateCallback');
-  passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
-    accessType: 'offline',
-    prompt: 'consent',
-  });
-};
+import cors from 'cors';
+const bodyParser = require('body-parser');
 
 dotenv.config(); // Load environment variables
 
@@ -29,12 +22,21 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+app.use(cookieParser());
+app.use(express.json()); // Parse JSON requests
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // add routes
 createRoutes(app);
 
 // === Middleware Setup ===
-app.use(cookieParser());
-app.use(express.json()); // Parse JSON requests
+// app.post('/api/v1/addTakeout', (req, res) => {
+//   console.log(req.body); // Should log the body content
+//   addTakeout(req, res);
+//   // res.status(200).send('Takeout added!');
+// });
 
 // === Express Session Setup ===
 app.use(
@@ -169,7 +171,7 @@ app.get('/auth/token', (req: Request, res: Response) => {
   console.log('user.googleId:', (req.user as any)?.googleId);
 
   console.log('verify no exceptions thrown');
-  
+
   const user = req.user as any; // Retrieve the user from the session (assuming it's set)
 
   if (!accessToken || !user) {
