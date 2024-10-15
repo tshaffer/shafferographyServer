@@ -1,49 +1,52 @@
 import express, { Request, Response, NextFunction } from 'express';
-import passport from 'passport';
+import mongoose from 'mongoose';
 import session from 'express-session';
+import passport from 'passport';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
-import path from 'path';
+import cookieParser from 'cookie-parser'; // To parse cookies
 import dotenv from 'dotenv';
-import connectDB from './config/db';
-import { Server } from 'http';
-import { createRoutes } from './routes';
-import { decrypt, encrypt } from './utilities/crypto';
-import { getUserFromDb, updateUserInDb } from './controllers';
-import { User, UserWithToken } from './types';
+import User from './models/User'; // User model
+import { encrypt } from './utils/encryption'; // Encryption utilities
 
 dotenv.config(); // Load environment variables
 
-connectDB();
-
-// Types
-interface OAuthUser {
-  profile: Profile;
-  accessToken: string;
-  refreshToken: string;
-}
-
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/myDatabase';
 
-// add routes
-createRoutes(app);
+// === Middleware Setup ===
+app.use(cookieParser()); // Parse cookies for access token handling
+app.use(express.json()); // Parse incoming JSON requests
 
-// Configure Express session
+// === Mongoose Setup ===
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  connectTimeoutMS: 10000, // 10-second timeout
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to the database.');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+// === Express Session Setup ===
 app.use(
   session({
-    secret: process.env.SESSION_SECRET as string,
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // 1 day
   })
 );
 
-// Initialize Passport middleware
+// === Passport Setup ===
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Google OAuth strategy configuration
 passport.use(
   new GoogleStrategy(
     {
@@ -60,19 +63,19 @@ passport.use(
         const encryptedRefreshToken = encrypt(refreshToken);
 
         // Find or create the user in the database
-        updateUserInDb(profile.id,
+        const user = await User.findOneAndUpdate(
+          { googleId: profile.id },
           { email: profile.emails[0].value, refreshToken: encryptedRefreshToken },
+          { upsert: true, new: true }
         );
 
-        // Attach the access token to the user object (only for immediate use)
-        const userWithToken: UserWithToken = {
-          googleId: profile.id,
-          email: profile.emails[0].value,
-          refreshToken: encryptedRefreshToken,
+        // Attach the access token temporarily to the user object
+        const userWithToken = {
+          ...user.toObject(),
           accessToken,
-        }
+        };
 
-        return done(null, userWithToken); // Pass user with access token
+        return done(null, userWithToken);
       } catch (error) {
         return done(error, null);
       }
@@ -80,75 +83,55 @@ passport.use(
   )
 );
 
-// Serialize and deserialize user
+// Serialize and deserialize user for session handling
 passport.serializeUser((user: any, done) => {
   done(null, user.googleId);
 });
 
 passport.deserializeUser(async (googleId: string, done) => {
   try {
-    const user: User = await getUserFromDb(googleId);
+    const user = await User.findOne({ googleId });
     done(null, user);
   } catch (error) {
     done(error, null);
   }
 });
 
-// Serve static files from the /public directory
-app.use(express.static(path.join(__dirname, '../public')));
+// === Routes ===
 
-// Serve the SPA on the root route (index.html)
-app.get('/', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-// OAuth login route
+// OAuth Login Route
 app.get(
   '/auth/google',
   passport.authenticate('google', {
     scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
     accessType: 'offline', // Request refresh token
-    prompt: 'consent', // Force consent to get the refresh token on first login
+    prompt: 'consent', // Force consent to get refresh token each time
   })
 );
 
-// OAuth callback route
+// OAuth Callback Route
 app.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   async (req: Request, res: Response) => {
     try {
-      // Use the structure of req.user directly (no profile field)
-      const { googleId, email, accessToken, refreshToken } = req.user as any;
+      const { googleId, email, accessToken } = req.user as any;
 
       if (!googleId || !email) {
         throw new Error('Missing user information from OAuth response');
       }
 
-      if (refreshToken) {
-        // Encrypt the refresh token before storing it
-        const encryptedRefreshToken = encrypt(refreshToken);
+      const expiresIn = 3600; // Token expiration in seconds
 
-        // Upsert the user in the database (create if not exists, update otherwise)
-        updateUserInDb(googleId, {
-          googleId,
-          email,
-          refreshToken: encryptedRefreshToken
-        });
-      } else {
-        console.warn('No refresh token received. Ensure accessType: "offline" is set.');
-      }
+      // Store access token in an HTTP-only cookie
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        maxAge: expiresIn * 1000, // 1 hour in milliseconds
+      });
 
-      const expiresIn = 3600; // Token expiration (1 hour)
-
-      // Redirect the user back to the client with access token and googleId
-      const queryParams = new URLSearchParams({
-        accessToken,
-        expiresIn: expiresIn.toString(),
-        googleId,
-      }).toString();
-
-      res.redirect(`/?${queryParams}`);
+      // Redirect user back to the client
+      res.redirect('/');
     } catch (error) {
       console.error('OAuth callback error:', error);
       res.status(500).send('Authentication failed');
@@ -156,135 +139,15 @@ app.get(
   }
 );
 
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  async (req: Request, res: Response) => {
-    try {
-      const user = req.user as any; // Extract user from the request
+// Endpoint to Retrieve Access Token from Cookie
+app.get('/auth/token', (req: Request, res: Response) => {
+  const accessToken = req.cookies.accessToken;
 
-      // Access the temporary access token from the user object
-      const { googleId, email, accessToken } = user;
-
-      const expiresIn = 3600; // Token expiration (1 hour)
-
-      // Redirect to client with token and user info
-      const queryParams = new URLSearchParams({
-        accessToken,
-        expiresIn: expiresIn.toString(),
-        googleId,
-      }).toString();
-
-      res.redirect(`/?${queryParams}`);
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      res.status(500).send('Authentication failed');
-    }
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Access token not found' });
   }
-);
 
-// app.get(
-//   '/auth/google/callback',
-//   passport.authenticate('google', { failureRedirect: '/' }),
-//   async (req: Request, res: Response) => {
-//     try {
-//       const { googleId, email, accessToken, refreshToken } = req.user as any;
-
-//       if (!googleId || !email) {
-//         throw new Error('Missing user information from OAuth response');
-//       }
-
-//       if (refreshToken) {
-//         const encryptedRefreshToken = encrypt(refreshToken);
-
-//         // Upsert the user in the database
-//         await User.findOneAndUpdate(
-//           { googleId },
-//           { email, refreshToken: encryptedRefreshToken },
-//           { upsert: true, new: true }
-//         );
-//       } else {
-//         console.warn('No refresh token received. Ensure accessType: "offline" is set.');
-//       }
-
-//       const expiresIn = 3600;
-
-//       // Store access token in a secure HTTP-only cookie
-//       res.cookie('accessToken', accessToken, {
-//         httpOnly: true,
-//         secure: process.env.NODE_ENV === 'production', // Send only over HTTPS in production
-//         maxAge: expiresIn * 1000, // 1 hour in milliseconds
-//       });
-
-//       // Redirect to the client
-//       res.redirect('/');
-//     } catch (error) {
-//       console.error('OAuth callback error:', error);
-//       res.status(500).send('Authentication failed');
-//     }
-//   }
-// );
-
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  async (req: Request, res: Response) => {
-    try {
-      const user = req.user as any; // Extract user from the request
-
-      // Access the temporary access token from the user object
-      const { googleId, email, accessToken } = user;
-
-      const expiresIn = 3600; // Token expiration (1 hour)
-
-      // Redirect to client with token and user info
-      const queryParams = new URLSearchParams({
-        accessToken,
-        expiresIn: expiresIn.toString(),
-        googleId,
-      }).toString();
-
-      res.redirect(`/?${queryParams}`);
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      res.status(500).send('Authentication failed');
-    }
-  }
-);
-
-// Refresh Token Endpoint
-app.post('/refresh-token', async (req: Request, res: Response) => {
-  const { googleId } = req.body;
-
-  try {
-    // Retrieve and decrypt the refresh token from the database
-    const user = await getUserFromDb(googleId);
-    if (!user) {
-      res.status(404).send('User not found');
-      return;
-    }
-    const decryptedRefreshToken = decrypt(user.refreshToken);
-
-    // Use the refresh token to get a new access token from Google
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        refresh_token: decryptedRefreshToken,
-        grant_type: 'refresh_token',
-      }),
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error_description);
-
-    res.json({ accessToken: data.access_token, expiresIn: data.expires_in });
-  } catch (error) {
-    console.error('Failed to refresh token:', error);
-    res.status(500).json({ error: 'Failed to refresh token' });
-  }
+  res.json({ accessToken });
 });
 
 // Logout Route
@@ -294,23 +157,26 @@ app.get('/logout', (req: Request, res: Response) => {
       console.error('Logout error:', err);
       return res.status(500).send('Logout failed');
     }
+
+    // Clear the access token cookie
+    res.clearCookie('accessToken');
     res.redirect('/');
   });
 });
 
-// Middleware to ensure user is authenticated
+// Protected Route Example
+app.get('/profile', ensureAuthenticated, (req: Request, res: Response) => {
+  const user = req.user as any;
+  res.json({ email: user.email, googleId: user.googleId });
+});
+
+// Middleware to Ensure User is Authenticated
 function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) return next();
   res.redirect('/');
 }
 
-// Start the server
-const server: Server<any> = app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
-
-process.on('unhandledRejection', (err: any, promise: any) => {
-  console.log(`Error: ${err.message}`);
-  // Close server and exit process
-  server.close(() => process.exit(1));
+// Start the Server
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
