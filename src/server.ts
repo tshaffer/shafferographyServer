@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import passport from 'passport';
 import { Profile, Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
-import cookieParser from 'cookie-parser'; // To parse cookies
+import cookieParser from 'cookie-parser'; // Parse cookies
 import dotenv from 'dotenv';
 import User from './models/User'; // User model
-import { encrypt } from './utils/encryption'; // Encryption utilities
+import { encrypt, decrypt } from './utils/encryption'; // Encryption utilities
 
 dotenv.config(); // Load environment variables
 
@@ -15,14 +15,14 @@ const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/myDatabase';
 
 // === Middleware Setup ===
-app.use(cookieParser()); // Parse cookies for access token handling
-app.use(express.json()); // Parse incoming JSON requests
+app.use(cookieParser());
+app.use(express.json()); // Parse JSON requests
 
 // === Mongoose Setup ===
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  connectTimeoutMS: 10000, // 10-second timeout
+  connectTimeoutMS: 10000,
 });
 
 mongoose.connection.on('connected', () => {
@@ -39,7 +39,7 @@ app.use(
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // 1 day
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 },
   })
 );
 
@@ -59,17 +59,14 @@ passport.use(
         console.log('AccessToken:', accessToken);
         console.log('RefreshToken:', refreshToken);
 
-        // Encrypt the refresh token before storing it
         const encryptedRefreshToken = encrypt(refreshToken);
 
-        // Find or create the user in the database
         const user = await User.findOneAndUpdate(
           { googleId: profile.id },
           { email: profile.emails[0].value, refreshToken: encryptedRefreshToken },
           { upsert: true, new: true }
         );
 
-        // Attach the access token temporarily to the user object
         const userWithToken = {
           ...user.toObject(),
           accessToken,
@@ -83,7 +80,6 @@ passport.use(
   )
 );
 
-// Serialize and deserialize user for session handling
 passport.serializeUser((user: any, done) => {
   done(null, user.googleId);
 });
@@ -104,8 +100,8 @@ app.get(
   '/auth/google',
   passport.authenticate('google', {
     scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
-    accessType: 'offline', // Request refresh token
-    prompt: 'consent', // Force consent to get refresh token each time
+    accessType: 'offline',
+    prompt: 'consent',
   })
 );
 
@@ -121,16 +117,14 @@ app.get(
         throw new Error('Missing user information from OAuth response');
       }
 
-      const expiresIn = 3600; // Token expiration in seconds
+      const expiresIn = 3600;
 
-      // Store access token in an HTTP-only cookie
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        maxAge: expiresIn * 1000, // 1 hour in milliseconds
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: expiresIn * 1000,
       });
 
-      // Redirect user back to the client
       res.redirect('/');
     } catch (error) {
       console.error('OAuth callback error:', error);
@@ -139,7 +133,7 @@ app.get(
   }
 );
 
-// Endpoint to Retrieve Access Token from Cookie
+// Access Token Retrieval Route
 app.get('/auth/token', (req: Request, res: Response) => {
   const accessToken = req.cookies.accessToken;
 
@@ -150,6 +144,37 @@ app.get('/auth/token', (req: Request, res: Response) => {
   res.json({ accessToken });
 });
 
+// Refresh Token Endpoint
+app.post('/refresh-token', async (req: Request, res: Response) => {
+  const { googleId } = req.body;
+
+  try {
+    const user = await User.findOne({ googleId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const decryptedRefreshToken = decrypt(user.refreshToken);
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        refresh_token: decryptedRefreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error_description);
+
+    res.json({ accessToken: data.access_token, expiresIn: data.expires_in });
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    res.status(500).json({ error: 'Failed to refresh token' });
+  }
+});
+
 // Logout Route
 app.get('/logout', (req: Request, res: Response) => {
   req.logout((err) => {
@@ -158,7 +183,6 @@ app.get('/logout', (req: Request, res: Response) => {
       return res.status(500).send('Logout failed');
     }
 
-    // Clear the access token cookie
     res.clearCookie('accessToken');
     res.redirect('/');
   });
@@ -170,7 +194,7 @@ app.get('/profile', ensureAuthenticated, (req: Request, res: Response) => {
   res.json({ email: user.email, googleId: user.googleId });
 });
 
-// Middleware to Ensure User is Authenticated
+// Authentication Middleware
 function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) return next();
   res.redirect('/');
