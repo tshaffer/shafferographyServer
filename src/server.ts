@@ -158,14 +158,26 @@ app.get(
 
 // Access Token Retrieval Route
 app.get('/auth/token', (req: Request, res: Response) => {
+
+  console.log('/auth/token handler');
+  console.log('req.cookies:', req.cookies);
+  console.log('req.cookies.accessToken:', req.cookies.accessToken);
+
   const accessToken = req.cookies.accessToken;
 
-  if (!accessToken) {
-    res.status(401).json({ error: 'Access token not found' });
+  console.log('user:', req.user);
+  console.log('user.googleId:', (req.user as any)?.googleId);
+
+  console.log('verify no exceptions thrown');
+  
+  const user = req.user as any; // Retrieve the user from the session (assuming it's set)
+
+  if (!accessToken || !user) {
+    res.status(401).json({ error: 'Access token or user not found' });
     return;
   }
 
-  res.json({ accessToken });
+  res.json({ accessToken, googleId: user.googleId });
 });
 
 // Refresh Token Endpoint
