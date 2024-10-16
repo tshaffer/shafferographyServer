@@ -36,7 +36,6 @@ import { importFromLocalStorage } from './localStorage';
 import path from 'path';
 
 export const getVersion = (request: Request, response: Response, next: any) => {
-  console.log('getVersion');
   const data: any = {
     serverVersion: version,
   };
@@ -44,7 +43,6 @@ export const getVersion = (request: Request, response: Response, next: any) => {
 };
 
 export const getMediaItemsToDisplay = async (request: Request, response: Response) => {
-  console.log('getMediaItemsToDisplay');
 
   const specifyDateRange: boolean = JSON.parse(request.query.specifyDateRange as string);
   const startDate: string | null = request.query.startDate ? request.query.startDate as string : null;
@@ -59,7 +57,6 @@ export const getMediaItemsToDisplay = async (request: Request, response: Respons
 };
 
 export const getMediaItemsToDisplayFromSearchSpec = async (request: Request, response: Response) => {
-  console.log('getMediaItemsToDisplayFromSearchSpec');
 
   /*
     path += '?matchRule=' + matchRule;
@@ -85,14 +82,12 @@ export const setDateRangeSpecification = async (request: Request, response: Resp
 }
 
 export const setStartDate = async (request: Request, response: Response, next: any) => {
-  console.log('setStartDate');
   const { startDate } = request.body;
   // setStartDateDb(startDate);
   response.sendStatus(200);
 }
 
 export const setEndDate = async (request: Request, response: Response, next: any) => {
-  console.log('setEndDate');
   const { endDate } = request.body;
   // setEndDateDb(endDate);
   response.sendStatus(200);
@@ -104,7 +99,6 @@ export const getPhotosToDisplaySpec = async (request: Request, response: Respons
 };
 
 export const getAllKeywordData = async (request: Request, response: Response, next: any) => {
-  console.log('getAllKeywordData');
   const keywordData: KeywordData = await getAllKeywordDataFromDb();
   response.json(keywordData);
 };
@@ -175,7 +169,6 @@ export const setRootKeywordNode = async (request: Request, response: Response, n
 }
 
 export const getTakeouts = async (request: Request, response: Response, next: any) => {
-  console.log('getTakeouts');
   const takeouts: any = await getTakeoutsFromDb();
   response.json(takeouts);
 };
@@ -188,7 +181,6 @@ export const addTakeout = async (request: Request, response: Response, next: any
 
 export const importFromTakeoutEndpoint = async (request: Request, response: Response, next: any) => {
   const { id, googleAccessToken } = request.body;
-  console.log('importFromTakeoutEndpoint', id, googleAccessToken);
   const takeout: Takeout = await getTakeoutById(id);
   const addedTakeoutData: AddedTakeoutData = await importFromTakeout(googleAccessToken, takeout.albumName, takeout.path);
   response.json(addedTakeoutData);
@@ -211,13 +203,11 @@ export const deleteMediaItems = async (request: Request, response: Response, nex
 }
 
 export const getDeletedMediaItems = async (request: Request, response: Response, next: any) => {
-  console.log('getDeletedMediaItems');
   const deletedMediaItems: any = await getDeletedMediaItemsFromDb();
   response.json(deletedMediaItems);
 };
 
 export const clearDeletedMediaItems = async (request: Request, response: Response, next: any) => {
-  console.log('clearDeletedMediaItems');
   await clearDeletedMediaItemsDb();
   response.sendStatus(200);
 }
@@ -245,7 +235,6 @@ export const getSubdirectoriesFromFs = async (dirPath: string): Promise<string[]
       .filter(dirent => dirent.isDirectory())
       // .map(dirent => path.join(realDirPath, dirent.name));
       .map(dirent => dirent.name);
-    console.log('files:', files);
     return files;
   } catch (err) {
     if (err.code === 'EACCES') {
@@ -262,11 +251,9 @@ export const getSubdirectoriesFromFs = async (dirPath: string): Promise<string[]
 }
 
 export const getLocalDriveImportFolders = async (request: Request, response: Response, next: any) => {
-  console.log('getLocalDriveImportFolders entry');
   // const dirPath = 'public/SHAFFEROTO/googlePhotosOverflow/ReadyForImport';
   const dirPath = '/Users/tedshaffer/Documents/photoConverterTmpData/ReadyForImport';
   const folders: string[] = await getSubdirectoriesFromFs(dirPath);
-  console.log('getLocalDriveImportFolders', folders);
   response.json(folders);
 };
 
@@ -278,7 +265,6 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
   const dirPath = '/Users/tedshaffer/Documents/photoConverterTmpData/ReadyForImport';
   const realDirPath = await realpath(dirPath);
   const fullPath: string = path.join(realDirPath, folder);
-  console.log('fullPath:', fullPath);
 
   await importFromLocalStorage(fullPath);
 

@@ -21,9 +21,6 @@ const getAlbumItems = async (googleAccessToken: string, albumId: string): Promis
 //    takeoutFolder - folder containing metadata for the files retrieved from a single takeout
 export const importFromTakeout = async (googleAccessToken: string, albumName: string, takeoutFolder: string): Promise<AddedTakeoutData> => {
 
-  console.log('importFromTakeout');
-  console.log('googleAccessToken: ', googleAccessToken);
-  
   // Step 1
   // get the google album metadata for named album
   const googleAlbum: GoogleAlbum | null = await getGoogleAlbumDataByName(googleAccessToken, albumName);
@@ -60,13 +57,10 @@ const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFol
 
   // retrieve metadata files and image files from takeout folder
   takeoutFolder = path.join('public/takeouts', takeoutFolder);
-  console.log('takeoutFolder', takeoutFolder);
 
   const takeoutMetaDataFilePaths: string[] = await getJsonFilePaths(takeoutFolder);
   const takeoutImageFilePaths: string[] = await getImageFilePaths(takeoutFolder);
 
-  console.log(takeoutMetaDataFilePaths.length);
-  console.log(takeoutImageFilePaths.length);
 
   const takeoutMetaDataFilePathsByImageFileName: StringToStringLUT = {};
   const takeoutExifDataByImageFileName: FilePathToExifTags = {};

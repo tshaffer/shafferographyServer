@@ -111,9 +111,6 @@ export const getAlbumMediaItemsFromGoogle = async (googleAccessToken: string, al
 
 export const getGoogleAlbumDataByName = async (googleAccessToken: string, albumName: string): Promise<GoogleAlbum | null> => {
 
-  console.log('getGoogleAlbumDataByName');
-  console.log('googleAccessToken: ', googleAccessToken);
-
   const googleAlbums: GoogleAlbum[] = await getAllGoogleAlbums(googleAccessToken);
 
   for (const googleAlbum of googleAlbums) {
@@ -127,9 +124,6 @@ export const getGoogleAlbumDataByName = async (googleAccessToken: string, albumN
 
 export const getAllGoogleAlbums = async (googleAccessToken: string, nextPageToken: any = null): Promise<GoogleAlbum[]> => {
 
-  console.log('getAllGoogleAlbums');
-  console.log('googleAccessToken: ', googleAccessToken);
-  
   const googleAlbums: GoogleAlbum[] = [];
 
   let url = GooglePhotoAPIs.albums;

@@ -60,8 +60,6 @@ export const getMediaItemsToDisplayFromDb = async (
     querySpec = { creationTime: { $gte: startDate, $lte: endDate } };
   }
 
-  console.log('getMediaItemsToDisplayFromDb querySpec: ', querySpec);
-
   const mediaItemModel = getMediaitemModel();
 
   const query = mediaItemModel.find(querySpec).sort( { creationTime: -1 });
@@ -80,8 +78,6 @@ export const getMediaItemsToDisplayFromDb = async (
 export const getMediaItemsToDisplayFromDbUsingSearchSpec = async (
   searchSpec: SearchSpec,
 ): Promise<MediaItem[]> => {
-  console.log('getMediaItemsToDisplayFromDbUsingSearchSpec');
-  console.log(searchSpec);
 
   const { matchRule, searchRules } = searchSpec;
 
@@ -138,8 +134,6 @@ export const getMediaItemsToDisplayFromDbUsingSearchSpec = async (
     }
   }
 
-  console.log('getMediaItemsToDisplayFromDb querySpec: ', querySpec);
-
   const mediaItemModel = getMediaitemModel();
 
   const query = mediaItemModel.find(querySpec);
@@ -179,7 +173,7 @@ export const setDateRangeSpecificationDb = async (specifyDateRange: boolean, sta
   return photosToDisplaySpecModel.find({}
     , (err: any, photosToDisplaySpecDocs: any) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else
         if (isArray(photosToDisplaySpecDocs)) {
           if (photosToDisplaySpecDocs.length === 0) {
@@ -197,15 +191,12 @@ export const setDateRangeSpecificationDb = async (specifyDateRange: boolean, sta
             return Promise.resolve();
           }
         } else {
-          console.log('photosToDisplaySpecDocs is not an array');
           return Promise.reject('photosToDisplaySpecDocs is not an array');
         }
     });
 }
 
 export const getPhotosToDisplaySpecFromDb = async (): Promise<PhotosToDisplaySpec> => {
-
-  console.log('getPhotosToDisplaySpecFromDb');
 
   const photoToDisplaySpecModel = getPhotosToDisplaySpecModel();
 
@@ -215,7 +206,6 @@ export const getPhotosToDisplaySpecFromDb = async (): Promise<PhotosToDisplaySpe
 
   const documents: any = await (photoToDisplaySpecModel as any).find().exec();
   if (documents.length === 0) {
-    console.log('photosToDisplaySpecDocs.length === 0');
   } else {
     photosToDisplaySpec = documents[0].toObject() as PhotosToDisplaySpec;
   }
@@ -480,7 +470,7 @@ export const addAutoPersonKeywordsToDb = async (keywordsSet: Set<string>): Promi
             });
         })
         .catch((error: any) => {
-          console.log('db add error: ', error);
+          console.error('db add error: ', error);
           debugger;
           return null;
           // if (error.code === 11000) {
@@ -520,7 +510,7 @@ const addMediaItemToDb = async (mediaItemModel: any, mediaItem: MediaItem): Prom
         return;
       })
       .catch((error: any) => {
-        console.log('db add error: ', error);
+        console.error('db add error: ', error);
         if (error.code === 11000) {
           return;
         } else {

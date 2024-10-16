@@ -10,7 +10,6 @@ export const downloadMediaItems = async (googleAccessToken: string, mediaItemGro
 
   let filesDownloaded = 0;
 
-  console.log('downloadMediaItems');
 
   for (const mediaItemGroup of mediaItemGroups) {
     if (!isNil(mediaItemGroup)) {
