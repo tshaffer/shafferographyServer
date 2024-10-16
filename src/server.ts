@@ -109,10 +109,14 @@ app.get('/', (req: Request, res: Response) => {
 // OAuth Login Route
 app.get(
   '/auth/google',
+  (req, res, next) => {
+    console.log('Redirecting to Google for authentication...');
+    next();
+  },
   passport.authenticate('google', {
     scope: ['profile', 'email', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
     accessType: 'offline',
-    prompt: 'consent',
+    prompt: 'select_account', // Ensure Google prompts for account selection
   })
 );
 
@@ -162,8 +166,6 @@ app.get('/auth/token', (req: Request, res: Response) => {
 
   console.log('user:', req.user);
   console.log('user.googleId:', (req.user as any)?.googleId);
-
-  console.log('verify no exceptions thrown');
 
   const user = req.user as any; // Retrieve the user from the session (assuming it's set)
 
