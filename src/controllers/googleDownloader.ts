@@ -5,10 +5,10 @@ import request from 'request';
 import { isNil } from "lodash";
 import { AuthService } from "../auth";
 import { GooglePhotoAPIs } from "./googlePhotos";
-import { getHeaders, getRequest } from './googleUtils';
-import { getAuthService } from './googlePhotosService';
+import { getGoogleHeaders, getGoogleRequest, getHeaders, getRequest } from './googleUtils';
+// import { getAuthService } from './googlePhotosService';
 
-export const downloadMediaItems = async (authService: AuthService, mediaItemGroups: MediaItem[][], mediaItemsDir: string): Promise<any> => {
+export const downloadMediaItems = async (googleAccessToken: string, mediaItemGroups: MediaItem[][], mediaItemsDir: string): Promise<any> => {
 
   let filesDownloaded = 0;
 
@@ -17,7 +17,7 @@ export const downloadMediaItems = async (authService: AuthService, mediaItemGrou
   for (const mediaItemGroup of mediaItemGroups) {
     if (!isNil(mediaItemGroup)) {
       for (const mediaItem of mediaItemGroup) {
-        const retVal: any = await (downloadMediaItem(authService, mediaItem, false));
+        const retVal: any = await (downloadMediaItem(googleAccessToken, mediaItem, false));
         if (retVal.valid) {
           console.log(mediaItem.fileName);
           console.log(retVal.where);
@@ -33,11 +33,11 @@ export const downloadMediaItems = async (authService: AuthService, mediaItemGrou
   console.log('Number of files downloaded: ', filesDownloaded);
 };
 
-export const redownloadMediaItem = async (authService: AuthService, mediaItem: MediaItem): Promise<any> => {
-  return downloadMediaItem(authService, mediaItem, true);
+export const redownloadMediaItem = async (googleAccessToken: string, mediaItem: MediaItem): Promise<any> => {
+  return downloadMediaItem(googleAccessToken, mediaItem, true);
 }
 
-const downloadMediaItem = async (authService: AuthService, mediaItem: MediaItem, overwrite: boolean): Promise<any> => {
+const downloadMediaItem = async (googleAccessToken: string, mediaItem: MediaItem, overwrite: boolean): Promise<any> => {
 
   const where = mediaItem.filePath;
 
@@ -47,7 +47,7 @@ const downloadMediaItem = async (authService: AuthService, mediaItem: MediaItem,
     return Promise.resolve(ret);
   }
 
-  const stream = await createDownloadStream(authService, mediaItem);
+  const stream = await createDownloadStream(googleAccessToken, mediaItem);
   return new Promise((resolve, reject) => {
     stream.pipe(fse.createWriteStream(where)
       .on('close', () => {
@@ -60,9 +60,9 @@ const downloadMediaItem = async (authService: AuthService, mediaItem: MediaItem,
   });
 };
 
-const createDownloadStream = async (authService: AuthService, mediaItem: MediaItem) => {
+const createDownloadStream = async (googleAccessToken: string, mediaItem: MediaItem) => {
 
-  const headers = await getHeaders(authService);
+  const headers = await getGoogleHeaders(googleAccessToken);
   const url: string = await createDownloadUrl(mediaItem);
 
   return request(url, { headers });
@@ -83,7 +83,7 @@ const createDownloadUrl = async (mediaItem: MediaItem) => {
   return `${mediaItem.baseUrl}=${downloadParams}`;
 };
 
-export const downloadMediaItemsMetadata = async (authService: AuthService, mediaItems: MediaItem[]): Promise<void> => {
+export const downloadMediaItemsMetadata = async (googleAccessToken: string, mediaItems: MediaItem[]): Promise<void> => {
 
   if (!isNil(mediaItems)) {
 
@@ -99,7 +99,7 @@ export const downloadMediaItemsMetadata = async (authService: AuthService, media
       url += `mediaItemIds=${mediaItemId}&`;
     });
 
-    const result: any = await getRequest(authService, url);
+    const result: any = await getGoogleRequest(googleAccessToken, url);
 
     const mediaItemResults: any[] = result.mediaItemResults;
 

@@ -11,7 +11,7 @@ import { Tags } from "exiftool-vendored";
 import * as path from 'path';
 import { downloadMediaItems, downloadMediaItemsMetadata, redownloadMediaItem } from "./googleDownloader";
 
-export let authService: AuthService;
+// export let authService: AuthService;
 
 // get googleMediaItems for named album
 const getAlbumItems = async (googleAccessToken: string, albumId: string): Promise<GoogleMediaItem[]> => {
@@ -54,7 +54,7 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
   // Step 4
   if (mediaItemsInDb.length === 0) {
     // If there are no mediaItems in the db for this album, add all the mediaItems in the album
-    const addedTakeoutData: AddedTakeoutData = await addAllMediaItemsFromTakeout(takeoutFolder, googleMediaItemsInAlbum, albumId);
+    const addedTakeoutData: AddedTakeoutData = await addAllMediaItemsFromTakeout(googleAccessToken, takeoutFolder, googleMediaItemsInAlbum, albumId);
     return addedTakeoutData;
   } else {
     // There are existing mediaItems in the db for this album. Compare the existing mediaItems in the db with the mediaItems in the album (and the takeout)
@@ -62,7 +62,7 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
   }
 }
 
-const addAllMediaItemsFromTakeout = async (takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string): Promise<AddedTakeoutData> => {
+const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string): Promise<AddedTakeoutData> => {
 
   // TEDTODO - should not be hard coded
   const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/images';
@@ -207,7 +207,7 @@ const addAllMediaItemsFromTakeout = async (takeoutFolder: string, googleMediaIte
 
   console.log('db additions complete');
 
-  downloadGooglePhotos(mediaItemsDir);
+  downloadGooglePhotos(googleAccessToken, mediaItemsDir);
 
   const addedTakeoutData: AddedTakeoutData = {
     addedKeywordData,
@@ -347,7 +347,7 @@ const mediaItemsIdentical = (mediaItemFromTakeout: MediaItem, mediaItemFromDb: M
 }
 
 
-const downloadGooglePhotos = async (mediaItemsDir: string) => {
+const downloadGooglePhotos = async (googleAccessToken: string, mediaItemsDir: string) => {
 
   console.log('downloadGooglePhotos');
   console.log(mediaItemsDir);
@@ -371,22 +371,22 @@ const downloadGooglePhotos = async (mediaItemsDir: string) => {
 
   await Promise.all(
     miniMediaItemGroups.map((mediaItems: MediaItem[]) => {
-      return downloadMediaItemsMetadata(authService, mediaItems);
+      return downloadMediaItemsMetadata(googleAccessToken, mediaItems);
     }
     ));
 
-  await downloadMediaItems(authService, miniMediaItemGroups, mediaItemsDir);
+  await downloadMediaItems(googleAccessToken, miniMediaItemGroups, mediaItemsDir);
 
   return Promise.resolve();
 }
 
-export const redownloadGooglePhoto = async (mediaItem: MediaItem): Promise<any> => {
+export const redownloadGooglePhoto = async (googleAccessToken: string, mediaItem: MediaItem): Promise<any> => {
 
-  if (isNil(authService)) {
-    authService = await getAuthService();
-  }
+  // if (isNil(authService)) {
+  //   authService = await getAuthService();
+  // }
 
-  return redownloadMediaItem(authService, mediaItem);
+  return redownloadMediaItem(googleAccessToken, mediaItem);
 }
 
 const createGroups = (mediaItems: MediaItem[], groupSize: number): MediaItem[][] => {

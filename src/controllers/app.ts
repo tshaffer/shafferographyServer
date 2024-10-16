@@ -229,9 +229,9 @@ export const removeDeletedMediaItem = async (request: Request, response: Respons
 }
 
 export const redownloadMediaItemEndpoint = async (request: Request, response: Response, next: any) => {
-  const { id } = request.body;
+  const { id, googleAccessToken } = request.body;
   const mediaItem: MediaItem = await getMediaItemFromDb(id);
-  await redownloadGooglePhoto(mediaItem);
+  await redownloadGooglePhoto(googleAccessToken, mediaItem);
   response.sendStatus(200);
 }
 
