@@ -22,10 +22,35 @@ export const getGoogleRequest = async (googleAccessToken: string, url: string): 
     });
 }
 
+export const postGoogleRequest = async (googleAccessToken: string, url: string, data: any) => {
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + googleAccessToken
+  };
+
+  return axios.post(
+    url,
+    data,
+    {
+      headers,
+    })
+    .then((response: any) => {
+      return Promise.resolve(response.data);
+    }).catch((err: Error) => {
+      debugger;
+      console.log('response to axios post: ');
+      console.log('err: ', err);
+      return Promise.reject(err);
+    });
+
+}
+
+
 export const getRequest = async (authService: AuthService, url: string): Promise<any> => {
 
   debugger;
-  
+
   const headers = await getHeaders(authService);
 
   return axios.get(
@@ -59,6 +84,8 @@ export const getRequest = async (authService: AuthService, url: string): Promise
 
 export const postRequest = async (authService: AuthService, url: string, data: any) => {
 
+  debugger;
+
   const headers = await getHeaders(authService);
 
   return axios.post(
@@ -79,6 +106,9 @@ export const postRequest = async (authService: AuthService, url: string, data: a
 }
 
 export const getHeaders = async (authService: AuthService) => {
+
+  debugger;
+
   const authToken = await authService.getToken();
   return {
     'Content-Type': 'application/json',

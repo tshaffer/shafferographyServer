@@ -1,7 +1,7 @@
 import { GoogleAlbum, GoogleMediaItem } from "../types";
 import { AuthService } from "../auth";
 import { isArray, isEmpty, isNil, isString } from 'lodash';
-import { getGoogleRequest, getRequest, postRequest } from './googleUtils';
+import { getGoogleRequest, getRequest, postGoogleRequest, postRequest } from './googleUtils';
 import axios from "axios";
 
 export const GooglePhotoAPIs = {
@@ -63,7 +63,7 @@ export const getAllMediaItemsFromGoogle = async (authService: AuthService, nextP
   return googleMediaItems;
 };
 
-export const getAlbumMediaItemsFromGoogle = async (authService: AuthService, albumId: string, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
+export const getAlbumMediaItemsFromGoogle = async (googleAccessToken: string, albumId: string, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
 
   const googleMediaItems: GoogleMediaItem[] = [];
 
@@ -82,7 +82,7 @@ export const getAlbumMediaItemsFromGoogle = async (authService: AuthService, alb
           pageToken: nextPageToken
         };
       }
-      const response: any = await postRequest(authService, url, postData);
+      const response: any = await postGoogleRequest(googleAccessToken, url, postData);
 
       if (!isNil(response)) {
         if (isArray(response.mediaItems)) {

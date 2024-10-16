@@ -14,8 +14,8 @@ import { downloadMediaItems, downloadMediaItemsMetadata, redownloadMediaItem } f
 export let authService: AuthService;
 
 // get googleMediaItems for named album
-const getAlbumItems = async (authService: AuthService, albumId: string): Promise<GoogleMediaItem[]> => {
-  const googleMediaItemsInAlbum: GoogleMediaItem[] = await getAlbumMediaItemsFromGoogle(authService, albumId, null);
+const getAlbumItems = async (googleAccessToken: string, albumId: string): Promise<GoogleMediaItem[]> => {
+  const googleMediaItemsInAlbum: GoogleMediaItem[] = await getAlbumMediaItemsFromGoogle(googleAccessToken, albumId, null);
   return googleMediaItemsInAlbum;
 }
 
@@ -27,7 +27,6 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
   console.log('importFromTakeout');
   console.log('googleAccessToken: ', googleAccessToken);
   
-
   // Step 0
   // connect to db; acquire authService
   // if (isNil(authService)) {
@@ -46,7 +45,7 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
 
   // Step 2
   // get the googleMediaItems for this album
-  const googleMediaItemsInAlbum: GoogleMediaItem[] = await getAlbumItems(authService, albumId);
+  const googleMediaItemsInAlbum: GoogleMediaItem[] = await getAlbumItems(googleAccessToken, albumId);
 
   // Step 3
   // Get existing db mediaItems for this album
@@ -360,9 +359,9 @@ const downloadGooglePhotos = async (mediaItemsDir: string) => {
   const mediaItemGroups: MediaItem[][] = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
   console.log('mediaItemGroups count: ' + mediaItemGroups.length);
 
-  if (isNil(authService)) {
-    authService = await getAuthService();
-  }
+  // if (isNil(authService)) {
+  //   authService = await getAuthService();
+  // }
 
   const miniMediaItemGroups: MediaItem[][] = [];
   for (let mediaGroupIndex = 0; mediaGroupIndex < mediaItemGroups.length; mediaGroupIndex++) {
