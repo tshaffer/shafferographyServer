@@ -1,8 +1,31 @@
 import axios from "axios";
 import { AuthService } from "../auth";
 
+export const getGoogleRequest = async (googleAccessToken: string, url: string): Promise<any> => {
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + googleAccessToken
+  };
+
+  return await axios.get(
+    url,
+    {
+      headers,
+    })
+    .then((response) => {
+      const body: any = response.data;
+      return Promise.resolve(body);
+    })
+    .catch((err) => {
+      debugger;
+    });
+}
+
 export const getRequest = async (authService: AuthService, url: string): Promise<any> => {
 
+  debugger;
+  
   const headers = await getHeaders(authService);
 
   return axios.get(

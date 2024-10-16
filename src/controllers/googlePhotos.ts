@@ -1,7 +1,7 @@
 import { GoogleAlbum, GoogleMediaItem } from "../types";
 import { AuthService } from "../auth";
 import { isArray, isEmpty, isNil, isString } from 'lodash';
-import { getRequest, postRequest } from './googleUtils';
+import { getGoogleRequest, getRequest, postRequest } from './googleUtils';
 import axios from "axios";
 
 export const GooglePhotoAPIs = {
@@ -139,45 +139,27 @@ export const getAllGoogleAlbums = async (googleAccessToken: string, nextPageToke
       url = `${GooglePhotoAPIs.albums}?pageToken=${nextPageToken}`;
     }
 
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + googleAccessToken
-    };
-    await axios.get(
-      url,
-      {
-        headers,
-      })
-      .then((response) => {
-        const body: any = response.data;
-        console.log('body: ');
-        console.log(body);
-      })
-      .catch((err) => {
-        debugger;
-      });
+    try {
 
-    // try {
+      const response: any = await getGoogleRequest(googleAccessToken, url);
+      if (!isNil(response)) {
+        if (isArray(response.albums)) {
+          response.albums.forEach((album: any) => {
+            googleAlbums.push(album);
+          });
+        }
+        else {
+          console.log('response.albums is not array');
+        }
+        nextPageToken = response.nextPageToken;
+      }
+      else {
+        console.log('response is nil');
+      }
 
-    //   const response: any = await getRequest(authService, url);
-    //   if (!isNil(response)) {
-    //     if (isArray(response.albums)) {
-    //       response.albums.forEach((album: any) => {
-    //         googleAlbums.push(album);
-    //       });
-    //     }
-    //     else {
-    //       console.log('response.albums is not array');
-    //     }
-    //     nextPageToken = response.nextPageToken;
-    //   }
-    //   else {
-    //     console.log('response is nil');
-    //   }
-
-    // } catch (err) {
-    //   nextPageToken = null;
-    // }
+    } catch (err) {
+      nextPageToken = null;
+    }
   } while (nextPageToken != null);
 
   return googleAlbums;
