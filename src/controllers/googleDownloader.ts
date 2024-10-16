@@ -3,10 +3,8 @@ import * as fse from 'fs-extra';
 import { MediaItem } from "../types";
 import request from 'request';
 import { isNil } from "lodash";
-import { AuthService } from "../auth";
 import { GooglePhotoAPIs } from "./googlePhotos";
-import { getGoogleHeaders, getGoogleRequest, getHeaders, getRequest } from './googleUtils';
-// import { getAuthService } from './googlePhotosService';
+import { getGoogleHeaders, getGoogleRequest } from './googleUtils';
 
 export const downloadMediaItems = async (googleAccessToken: string, mediaItemGroups: MediaItem[][], mediaItemsDir: string): Promise<any> => {
 

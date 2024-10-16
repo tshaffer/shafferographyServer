@@ -1,8 +1,7 @@
 import { GoogleAlbum, GoogleMediaItem } from "../types";
-import { AuthService } from "../auth";
+// import { AuthService } from "../auth";
 import { isArray, isEmpty, isNil, isString } from 'lodash';
-import { getGoogleRequest, getRequest, postGoogleRequest, postRequest } from './googleUtils';
-import axios from "axios";
+import { getGoogleRequest, postGoogleRequest } from './googleUtils';
 
 export const GooglePhotoAPIs = {
   mediaItem: 'https://photoslibrary.googleapis.com/v1/mediaItems/',
@@ -13,6 +12,7 @@ export const GooglePhotoAPIs = {
   BATCH_GET_LIMIT: 49
 };
 
+/*
 export const getMediaItemFromGoogle = async (authService: AuthService, id: string): Promise<GoogleMediaItem> => {
 
   const url = `${GooglePhotoAPIs.mediaItem}${id}`;
@@ -62,6 +62,7 @@ export const getAllMediaItemsFromGoogle = async (authService: AuthService, nextP
 
   return googleMediaItems;
 };
+*/
 
 export const getAlbumMediaItemsFromGoogle = async (googleAccessToken: string, albumId: string, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
 
@@ -165,6 +166,7 @@ export const getAllGoogleAlbums = async (googleAccessToken: string, nextPageToke
   return googleAlbums;
 };
 
+/*
 export const getGoogleAlbumData = async (authService: AuthService, albumId: string): Promise<GoogleAlbum> => {
 
   const url = `${GooglePhotoAPIs.album}${albumId}`;
@@ -183,4 +185,4 @@ export const getGoogleAlbumData = async (authService: AuthService, albumId: stri
   }
   return googleAlbum;
 }
-
+*/

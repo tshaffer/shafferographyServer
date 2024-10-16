@@ -1,7 +1,5 @@
 import { isEqual, isNil } from "lodash";
 import { AddedTakeoutData, Keyword, KeywordData, KeywordNode, MediaItem, StringToMediaItem } from '../types';
-import { getAuthService } from "./googlePhotosService";
-import { AuthService } from "../auth";
 import { GoogleAlbum, GoogleMediaItem } from "googleTypes";
 import { GooglePhotoAPIs, getAlbumMediaItemsFromGoogle, getGoogleAlbumDataByName } from "./googlePhotos";
 import { addAutoPersonKeywordsToDb, addMediaItemToMediaItemsDBTable, deleteMediaItemsFromDb, getAllMediaItemsFromDb, getAutoPersonKeywordNodesFromDb, getKeywordsFromDb, getMediaItemsInAlbumFromDb, updateMediaItemInDb } from "./dbInterface";
@@ -11,7 +9,6 @@ import { Tags } from "exiftool-vendored";
 import * as path from 'path';
 import { downloadMediaItems, downloadMediaItemsMetadata, redownloadMediaItem } from "./googleDownloader";
 
-// export let authService: AuthService;
 
 // get googleMediaItems for named album
 const getAlbumItems = async (googleAccessToken: string, albumId: string): Promise<GoogleMediaItem[]> => {
@@ -27,12 +24,6 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
   console.log('importFromTakeout');
   console.log('googleAccessToken: ', googleAccessToken);
   
-  // Step 0
-  // connect to db; acquire authService
-  // if (isNil(authService)) {
-  //   authService = await getAuthService();
-  // }
-
   // Step 1
   // get the google album metadata for named album
   const googleAlbum: GoogleAlbum | null = await getGoogleAlbumDataByName(googleAccessToken, albumName);
@@ -359,10 +350,6 @@ const downloadGooglePhotos = async (googleAccessToken: string, mediaItemsDir: st
   const mediaItemGroups: MediaItem[][] = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
   console.log('mediaItemGroups count: ' + mediaItemGroups.length);
 
-  // if (isNil(authService)) {
-  //   authService = await getAuthService();
-  // }
-
   const miniMediaItemGroups: MediaItem[][] = [];
   for (let mediaGroupIndex = 0; mediaGroupIndex < mediaItemGroups.length; mediaGroupIndex++) {
     const mediaItemGroup: MediaItem[] = mediaItemGroups[mediaGroupIndex];
@@ -381,11 +368,6 @@ const downloadGooglePhotos = async (googleAccessToken: string, mediaItemsDir: st
 }
 
 export const redownloadGooglePhoto = async (googleAccessToken: string, mediaItem: MediaItem): Promise<any> => {
-
-  // if (isNil(authService)) {
-  //   authService = await getAuthService();
-  // }
-
   return redownloadMediaItem(googleAccessToken, mediaItem);
 }
 

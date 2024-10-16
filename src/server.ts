@@ -31,13 +31,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // add routes
 createRoutes(app);
 
-// === Middleware Setup ===
-// app.post('/api/v1/addTakeout', (req, res) => {
-//   console.log(req.body); // Should log the body content
-//   addTakeout(req, res);
-//   // res.status(200).send('Takeout added!');
-// });
-
 // === Express Session Setup ===
 app.use(
   session({
