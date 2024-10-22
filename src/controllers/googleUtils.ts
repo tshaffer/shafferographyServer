@@ -7,7 +7,7 @@ export const getGoogleHeaders = async (googleAccessToken: string) => {
     'Authorization': 'Bearer ' + googleAccessToken
   };
   return headers;
-  
+
 };
 
 export const getGoogleRequest = async (googleAccessToken: string, url: string): Promise<any> => {
@@ -27,7 +27,9 @@ export const getGoogleRequest = async (googleAccessToken: string, url: string): 
       return Promise.resolve(body);
     })
     .catch((err) => {
-      debugger;
+      console.log('Exception in getGoogleRequest');
+      console.log(err);
+      return Promise.reject(err);
     });
 }
 
