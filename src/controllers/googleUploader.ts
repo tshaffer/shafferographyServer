@@ -15,10 +15,8 @@ const uploadMediaItem = async (googleAccessToken: string, filePath: string): Pro
 
     const url = GooglePhotoAPIs.uploadMediaItem;
 
-    const uploadResponse: any = await postGoogleRequest(googleAccessToken, url, fileName, mediaBuffer);
-
-    // The response is the upload token
-    const uploadToken = uploadResponse.data;
+    const uploadToken: string = await postGoogleRequest(googleAccessToken, url, fileName, mediaBuffer);
+    console.log('uploadToken: ', uploadToken);
     return uploadToken;
   } catch (error) {
     console.error('Error uploading media:', error.response ? error.response.data : error);
@@ -27,7 +25,7 @@ const uploadMediaItem = async (googleAccessToken: string, filePath: string): Pro
 }
 
 // A function to create a media item using the upload token
-const   createMediaItem = async (googleAccessToken: string, uploadToken: string, description: string): Promise<any> => {
+const createMediaItem = async (googleAccessToken: string, uploadToken: string, description: string): Promise<any> => {
   try {
 
     const url = GooglePhotoAPIs.batchCreate;
@@ -69,18 +67,18 @@ export const uploadGoogleMediaItem = async (request: Request, response: Response
   console.log('filePath: ', filePath);
   console.log('description: ', description);
 
-  response.sendStatus(200);
-
-  // try {
-  //   const uploadToken = await uploadMediaItem('', filePath);
-  //   const mediaItem = await createMediaItem(googleAccessToken, uploadToken, description);
-  //   response.status(200).json(mediaItem);
-  // } catch (error) {
-  //   response.status(500).json({ message: error.message });
-  // }
+  try {
+    const uploadToken = await uploadMediaItem(googleAccessToken, filePath);
+    console.log('uploadToken: ', uploadToken);
+    const mediaItem = await createMediaItem(googleAccessToken, uploadToken, description);
+    console.log('mediaItem: ', mediaItem);
+    response.status(200).json(mediaItem);
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
 }
 
-const postGoogleRequest = async (googleAccessToken: string, url: string, fileName: string, data: any) => {
+const postGoogleRequest = async (googleAccessToken: string, url: string, fileName: string, data: any): Promise<string> => {
 
   const headers = {
     'Authorization': 'Bearer ' + googleAccessToken,
@@ -96,6 +94,8 @@ const postGoogleRequest = async (googleAccessToken: string, url: string, fileNam
       headers,
     })
     .then((response: any) => {
+      console.log('uploadResponse: ', response);
+      console.log('uploadResponse.data: ', response?.data);
       return Promise.resolve(response.data);
     }).catch((err: Error) => {
       debugger;
