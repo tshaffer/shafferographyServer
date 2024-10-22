@@ -9,6 +9,8 @@ export const GooglePhotoAPIs = {
   albums: 'https://photoslibrary.googleapis.com/v1/albums',
   album: 'https://photoslibrary.googleapis.com/v1/albums/',
   mediaItemsSearch: 'https://photoslibrary.googleapis.com/v1/mediaItems:search',
+  uploadMediaItem: 'https://photoslibrary.googleapis.com/v1/uploads',
+  batchCreate: 'https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate',
   BATCH_GET_LIMIT: 49
 };
 

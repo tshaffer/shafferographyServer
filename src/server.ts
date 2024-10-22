@@ -134,17 +134,6 @@ app.get(
       'https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata',
       'https://www.googleapis.com/auth/photoslibrary.readonly.originals',
       'https://www.googleapis.com/auth/photoslibrary.sharing',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-      // 'https://www.googleapis.com/auth/photoslibrary',
-
-      // 'https://www.googleapis.com/auth/photoslibrary.readonly',
-      // 'https://www.googleapis.com/auth/photoslibrary.appendonly',
-      // 'https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata',
-      // 'https://www.googleapis.com/auth/photoslibrary.edit.appcreateddata'
     ],
     accessType: 'offline',
     prompt: 'select_account consent', // Force Google to re-prompt account and re-consent

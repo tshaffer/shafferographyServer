@@ -28,6 +28,7 @@ import {
   redownloadMediaItemEndpoint,
   getLocalDriveImportFolders,
   importFromLocalStorageEndpoint,
+  uploadGoogleMediaItem,
 } from '../controllers';
 import { createPhotosToDisplaySpec } from '../utilities/utilities';
 
@@ -71,5 +72,8 @@ export const createRoutes = (app: express.Application) => {
   app.post('/api/v1/importFromLocalStorage', importFromLocalStorageEndpoint);
 
   app.post('/api/v1/redownloadMediaItem', redownloadMediaItemEndpoint);
+
+  app.post('/api/v1/uploadMediaItem', uploadGoogleMediaItem);
+
 };
 
