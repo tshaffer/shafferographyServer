@@ -274,10 +274,19 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
 
 export const uploadRawMediaEndpoint = async (request: Request, response: Response, next: any) => {
 
+  // const storagex = multer.diskStorage({
+  //   destination: (req, file, cb) => {
+  //     cb(null, 'public/statementUploads/');
+  //   },
+  //   filename: (req, file, cb) => {
+  //     cb(null, file.originalname);
+  //   },
+  // });
+
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // Set upload directory based on the file's relative path
-      const uploadPath = path.join(__dirname, 'uploads', path.dirname(file.originalname));
+      const uploadPath = path.join('public/uploads', path.dirname(file.originalname));
       
       // Create directory if it doesn't exist
       if (!fs.existsSync(uploadPath)) {
@@ -291,7 +300,6 @@ export const uploadRawMediaEndpoint = async (request: Request, response: Respons
     }
   });
 
-  // const upload = multer({ storage }).array('files[]');
   const upload = multer({ storage });
   upload.array('files')(request, response, async (err) => {
     console.log('upload.array callback');
@@ -315,6 +323,4 @@ export const uploadRawMediaEndpoint = async (request: Request, response: Respons
       return response.status(200).send(responseData);
     }
   });
-
-  // response.sendStatus(200);
 }
