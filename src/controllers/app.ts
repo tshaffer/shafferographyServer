@@ -1,7 +1,4 @@
 import { Request, Response } from 'express';
-import passport from 'passport';
-import express from 'express';
-import multer from 'multer';
 
 import * as fs from 'fs';
 import { promisify } from 'util';
@@ -272,55 +269,3 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
   response.sendStatus(200);
 }
 
-export const uploadRawMediaEndpoint = async (request: Request, response: Response, next: any) => {
-
-  // const storagex = multer.diskStorage({
-  //   destination: (req, file, cb) => {
-  //     cb(null, 'public/statementUploads/');
-  //   },
-  //   filename: (req, file, cb) => {
-  //     cb(null, file.originalname);
-  //   },
-  // });
-
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      // Set upload directory based on the file's relative path
-      const uploadPath = path.join('public/uploads', path.dirname(file.originalname));
-      
-      // Create directory if it doesn't exist
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-      }
-  
-      cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-      cb(null, path.basename(file.originalname)); // Save file with its original name
-    }
-  });
-
-  const upload = multer({ storage });
-  upload.array('files')(request, response, async (err) => {
-    console.log('upload.array callback');
-    console.log(upload);
-    if (err instanceof multer.MulterError) {
-      console.log('MulterError: ', err);
-      return response.status(500).json(err);
-    } else if (err) {
-      console.log('nonMulterError: ', err);
-      return response.status(500).json(err);
-    } else {
-      console.log('no error on upload');
-      console.log(request.files.length);
-
-      const uploadedCameraFiles: Express.Multer.File[] = (request as any).files;
-      console.log(uploadedCameraFiles);
-
-      const responseData = {
-        uploadStatus: 'success',
-      };
-      return response.status(200).send(responseData);
-    }
-  });
-}

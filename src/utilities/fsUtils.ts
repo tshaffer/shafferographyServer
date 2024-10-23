@@ -164,3 +164,30 @@ export const fsCopyFile = async (source: string, destination: string): Promise<v
     console.error(`Error copying file from ${source} to ${destination}:`, err);
   }
 }
+
+export const getConvertibleImageFilePaths = (convertibleImageFileExtensions: string[], rootPath: string): string[] => {
+  const imageFiles: string[] = [];
+  const files = getFilesInDirectory(rootPath);
+  for (const file of files) {
+    const extension: string = path.extname(file);
+    if (convertibleImageFileExtensions.includes(extension)) {
+      imageFiles.push(file);
+    }
+  }
+  return imageFiles;
+}
+
+export const checkAndCreateDirectory = async (path: string) => {
+  try {
+    await fs.access(path);
+    console.log('Directory already exists.');
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      // Directory does not exist, create it
+      await fs.mkdir(path, { recursive: true });
+      console.log('Directory created successfully!');
+    } else {
+      throw err;
+    }
+  }
+}
