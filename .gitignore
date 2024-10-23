@@ -4,6 +4,7 @@ src/config/config.env
 secrets/
 build/
 public/images
+public/uploads
 public/userAvatars
 public/appAvatars
 public/backupAppAvatars
