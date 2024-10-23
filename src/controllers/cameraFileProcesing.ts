@@ -5,6 +5,7 @@ import * as fs from 'fs';
 
 import path from 'path';
 import { convertHEICFileToJPEGWithEXIF } from './heicConverters';
+import { getMediaItemFromGoogle } from './googlePhotos';
 
 export const uploadRawMediaEndpoint = async (request: Request, response: Response, next: any) => {
 
@@ -78,3 +79,12 @@ export const convertHEICFileEndpoint = async (request: Request, response: Respon
     });
   }
 };
+
+export const getGoogleMediaItem = async (request: Request, response: Response, next: any) => {
+  console.log('getGoogleMediaItem');
+  console.log(request.query.googleAccessToken);
+  console.log(request.query.googleId);
+  
+  const retVal = await getMediaItemFromGoogle(request.query.googleAccessToken as string, request.query.googleId as string);
+  response.json(retVal);
+}

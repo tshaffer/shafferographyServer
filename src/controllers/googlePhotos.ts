@@ -66,6 +66,15 @@ export const getAllMediaItemsFromGoogle = async (authService: AuthService, nextP
 };
 */
 
+export const getMediaItemFromGoogle = async (googleAccessToken: string, id: string): Promise<GoogleMediaItem> => {
+
+  const url = `${GooglePhotoAPIs.mediaItem}${id}`;
+
+  const googleMediaItem: GoogleMediaItem = await getGoogleRequest(googleAccessToken, url);
+
+  return googleMediaItem;
+}
+
 export const getAlbumMediaItemsFromGoogle = async (googleAccessToken: string, albumId: string, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
 
   const googleMediaItems: GoogleMediaItem[] = [];
