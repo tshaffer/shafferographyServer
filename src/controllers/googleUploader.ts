@@ -57,22 +57,6 @@ const createMediaItem = async (googleAccessToken: string, uploadToken: string, d
   }
 }
 
-export const createGoogleAlbumEndpoint = async (request: Request, response: Response, next: any) => {
-  const googleAccessToken = request.body.googleAccessToken;
-  const albumName = request.body.albumName;
-
-  console.log('createGoogleAlbumEndpoint: ');
-  console.log('googleAccessToken: ', googleAccessToken);
-  console.log('albumName: ', albumName);
-
-  try {
-    const googleAlbum = await createGoogleAlbum(googleAccessToken, albumName);
-    console.log('googleAlbum: ', googleAlbum);
-    response.status(200).json(googleAlbum);
-  } catch (error) {
-    response.status(500).json({ message: error.message });
-  }
-}
 export const uploadGoogleMediaItem = async (request: Request, response: Response, next: any) => {
   const googleAccessToken = request.body.googleAccessToken;
   const filePath = request.body.filePath;
@@ -122,14 +106,32 @@ const postGoogleRequest = async (googleAccessToken: string, url: string, fileNam
 
 }
 
-/* Expected response:
+/* Example response:
 {
-  "productUrl": "album-product-url",
-  "id": "album-id",
-  "title": "album-title",
-  "isWriteable": "whether-you-can-write-to-this-album"
+   "id": "AEEKk93dvd6Kyp_BFOy4ee7AfuH_CEx5iCnm0b6iqg7R2XELay3h_W9skSAufp8Ixx3umRZlof4O",
+   "title": "ang-0",
+   "productUrl": "https://photos.google.com/lr/album/AEEKk93dvd6Kyp_BFOy4ee7AfuH_CEx5iCnm0b6iqg7R2XELay3h_W9skSAufp8Ixx3umRZlof4O",
+   "isWriteable": true
 }
 */
+export const createGoogleAlbumEndpoint = async (request: Request, response: Response, next: any) => {
+
+  const googleAccessToken = request.body.googleAccessToken;
+  const albumName = request.body.albumName;
+
+  console.log('createGoogleAlbumEndpoint: ');
+  console.log('googleAccessToken: ', googleAccessToken);
+  console.log('albumName: ', albumName);
+
+  try {
+    const googleAlbum = await createGoogleAlbum(googleAccessToken, albumName);
+    console.log('googleAlbum: ', googleAlbum);
+    response.status(200).json(googleAlbum);
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
+}
+
 export const createGoogleAlbum = async (googleAccessToken: string, albumName: string): Promise<any> => {
 
   const url = GooglePhotoAPIs.albums;
@@ -162,4 +164,63 @@ export const createGoogleAlbum = async (googleAccessToken: string, albumName: st
     throw new Error('Failed to create album');
   }
 }
+
+export const addMediaItemsToAlbumEndpoint = async (request: Request, response: Response, next: any) => {
+
+  const googleAccessToken = request.body.googleAccessToken;
+  const albumId = request.body.albumId;
+  const mediaItemIds = request.body.mediaItemIds;
+
+  console.log('addMediaItemsToAlbumEndpoint: ');
+  console.log('googleAccessToken: ', googleAccessToken);
+  console.log('albumId: ', albumId);
+  console.log('mediaItemIds: ', mediaItemIds);
+
+  try {
+    await addMediaItemsToAlbum(googleAccessToken, albumId, mediaItemIds);
+    console.log('successful addMediaItemsToAlbumEndpoint: ');
+    response.sendStatus(200);
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
+}
+
+export const addMediaItemsToAlbum = async (
+  googleAccessToken: string,
+  albumId: string,
+  mediaItemIds: string[]
+): Promise<any> => {
+
+  const url = `https://photoslibrary.googleapis.com/v1/albums/${albumId}:batchAddMediaItems`;
+
+  try {
+    const response = await axios.post(
+      url,
+      {
+        mediaItemIds,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${googleAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('addMediaItemsToAlbum: ', response);
+    console.log('addMediaItemsToAlbum.data: ', response?.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding media items to album:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        `Failed to add media items: ${error.response.status} - ${error.response.data.error.message}`
+      );
+    } else {
+      throw new Error(`Failed to add media items: ${error}`);
+    }
+  }
+};
+
+
 
