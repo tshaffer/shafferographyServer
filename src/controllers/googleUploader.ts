@@ -57,6 +57,22 @@ const createMediaItem = async (googleAccessToken: string, uploadToken: string, d
   }
 }
 
+export const createGoogleAlbumEndpoint = async (request: Request, response: Response, next: any) => {
+  const googleAccessToken = request.body.googleAccessToken;
+  const albumName = request.body.albumName;
+
+  console.log('createGoogleAlbumEndpoint: ');
+  console.log('googleAccessToken: ', googleAccessToken);
+  console.log('albumName: ', albumName);
+
+  try {
+    const googleAlbum = await createGoogleAlbum(googleAccessToken, albumName);
+    console.log('googleAlbum: ', googleAlbum);
+    response.status(200).json(googleAlbum);
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
+}
 export const uploadGoogleMediaItem = async (request: Request, response: Response, next: any) => {
   const googleAccessToken = request.body.googleAccessToken;
   const filePath = request.body.filePath;
@@ -105,3 +121,45 @@ const postGoogleRequest = async (googleAccessToken: string, url: string, fileNam
     });
 
 }
+
+/* Expected response:
+{
+  "productUrl": "album-product-url",
+  "id": "album-id",
+  "title": "album-title",
+  "isWriteable": "whether-you-can-write-to-this-album"
+}
+*/
+export const createGoogleAlbum = async (googleAccessToken: string, albumName: string): Promise<any> => {
+
+  const url = GooglePhotoAPIs.albums;
+
+  const headers = {
+    'Authorization': 'Bearer ' + googleAccessToken,
+    'Content-type': 'application/octet-stream',
+  };
+
+  const data = {
+    album: {
+      title: albumName,
+    },
+  };
+
+  try {
+    return axios.post(
+      url,
+      data,
+      {
+        headers,
+      })
+      .then((response: any) => {
+        console.log('uploadResponse: ', response);
+        console.log('uploadResponse.data: ', response?.data);
+        return Promise.resolve(response.data);
+      });
+  } catch (error) {
+    console.error('Error creating album:', error.response ? error.response.data : error);
+    throw new Error('Failed to create album');
+  }
+}
+

@@ -33,6 +33,7 @@ import {
   convertHEICFileEndpoint,
   convertHEICFilesEndpoint,
   getGoogleMediaItem,
+  createGoogleAlbumEndpoint,
 } from '../controllers';
 import { createPhotosToDisplaySpec } from '../utilities/utilities';
 
@@ -83,6 +84,8 @@ export const createRoutes = (app: express.Application) => {
   app.post('/api/v1/convertHEICFile', convertHEICFileEndpoint);
 
   app.get('/api/v1/googleMediaItem', getGoogleMediaItem);
+
+  app.post('/api/v1/createGoogleAlbum', createGoogleAlbumEndpoint);
 
 };
 
