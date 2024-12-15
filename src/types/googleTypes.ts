@@ -40,3 +40,66 @@ export interface GoogleAlbum {
   coverPhotoBaseUrl: string;
   coverPhotoMediaItemId: string;
 }
+
+export interface CreateGoogleAlbumResponse {
+  id: string;
+  title: string;
+  productUrl: string;
+  isWriteable: boolean;
+}
+
+export interface ContributorInfo {
+  "profilePictureBaseUrl": string,
+  "displayName": string
+}
+
+export interface Photo {
+  "cameraMake": string,
+  "cameraModel": string,
+  "focalLength": number,
+  "apertureFNumber": number,
+  "isoEquivalent": number,
+  "exposureTime": string
+}
+
+export interface Video {
+  "cameraMake": string,
+  "cameraModel": string,
+  "fps": number,
+  "status": any
+}
+
+export interface MediaMetadata {
+    "creationTime": string,
+    "width": string,
+    "height": string,
+    // Union field metadata can be only one of the following:
+    "photo"?: Photo,
+    "video"?: Video
+  }
+
+export interface BatchCreateGoogleMediaItem {
+  "id": string,
+  "description": string,
+  "productUrl": string,
+  "baseUrl"?: string,
+  "mimeType": string,
+  "mediaMetadata": MediaMetadata
+  "contributorInfo"?: ContributorInfo,
+  "filename": string
+}
+
+export interface Status {
+  "message": string,
+  "code": number,
+  "details": [any],
+}
+export interface NewMediaItemResult {
+  "uploadToken": string,
+  "status": Status,
+  "mediaItem": BatchCreateGoogleMediaItem,
+}
+
+export interface CreateMediaItemsResponse {
+  newMediaItemResults: [NewMediaItemResult];
+}
