@@ -28,7 +28,7 @@ const upload = multer({
 });
 
 export const uploadFiles = async (request: Request, response: Response): Promise<UploadMediaFilesResponse> => {
-  
+
   return new Promise((resolve, reject) => {
     upload.array('files')(request, response, (err) => {
       if (err instanceof multer.MulterError) {
@@ -48,7 +48,7 @@ export const uploadFiles = async (request: Request, response: Response): Promise
       const uploadedCameraFiles: Express.Multer.File[] = (request as any).files;
       console.log(uploadedCameraFiles);
 
-      resolve( { albumName, files: uploadedCameraFiles });
+      resolve({ albumName, files: uploadedCameraFiles });
     });
   });
 };
@@ -128,7 +128,8 @@ async function getLocalStorageMediaItem(fullPath: string): Promise<MediaItem> {
   const geoData: GeoData | null = await extractGeoData(exifData);
 
   const mediaItem: MediaItem = {
-    googleId: '',
+    uniqueId: uuidv4(),
+    googleMediaItemId: '',
     fileName: path.basename(fullPath),
     albumId: '',
     filePath: fullPath,
@@ -159,9 +160,9 @@ const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaIt
     const mediaItemFileName = mediaItem.fileName;
     if (isImageFile(mediaItemFileName)) {
       const fileSuffix = path.extname(mediaItemFileName);
-      const shardedFileName = mediaItem.googleId + fileSuffix;
-      
-      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleId);
+      const shardedFileName = mediaItem.googleMediaItemId + fileSuffix;
+
+      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleMediaItemId);
       // const from = path.join(takeoutFolder, googleFileName);
       const where = path.join(baseDir, shardedFileName);
 

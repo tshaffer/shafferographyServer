@@ -45,7 +45,8 @@ async function getLocalStorageMediaItem(fullPath: string): Promise<MediaItem> {
   const geoData: GeoData | null = await extractGeoData(exifData);
 
   const mediaItem: MediaItem = {
-    googleId: uuidv4(),
+    uniqueId: uuidv4(),
+    googleMediaItemId: '',
     fileName: path.basename(fullPath),
     albumId: '',
     filePath: fullPath,
@@ -133,9 +134,9 @@ const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaIt
     const mediaItemFileName = mediaItem.fileName;
     if (isImageFile(mediaItemFileName)) {
       const fileSuffix = path.extname(mediaItemFileName);
-      const shardedFileName = mediaItem.googleId + fileSuffix;
-      
-      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleId);
+      const shardedFileName = mediaItem.googleMediaItemId + fileSuffix;
+
+      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleMediaItemId);
       // const from = path.join(takeoutFolder, googleFileName);
       const where = path.join(baseDir, shardedFileName);
 

@@ -86,13 +86,13 @@ export const downloadMediaItemsMetadata = async (googleAccessToken: string, medi
 
     const mediaItemsById: any = {};
     for (const mediaItem of mediaItems) {
-      mediaItemsById[mediaItem.googleId] = mediaItem;
+      mediaItemsById[mediaItem.googleMediaItemId] = mediaItem;
     }
 
     let url = `${GooglePhotoAPIs.mediaItems}:batchGet?`;
 
     mediaItems.forEach((mediaItem: MediaItem) => {
-      const mediaItemId = mediaItem.googleId;
+      const mediaItemId = mediaItem.googleMediaItemId;
       url += `mediaItemIds=${mediaItemId}&`;
     });
 

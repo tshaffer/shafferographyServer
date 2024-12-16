@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { isEqual, isNil } from "lodash";
 import { AddedTakeoutData, Keyword, KeywordData, KeywordNode, MediaItem, StringToMediaItem } from '../types';
 import { GoogleAlbum, GoogleMediaItem } from "googleTypes";
@@ -163,7 +164,8 @@ const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFol
 
         // generate mediaItem tags from people
         const dbMediaItem: MediaItem = {
-          googleId: mediaItemMetadataFromGoogleAlbum.id,
+          uniqueId: uuidv4(),
+          googleMediaItemId: mediaItemMetadataFromGoogleAlbum.id,
           fileName: mediaItemMetadataFromGoogleAlbum.filename,
           albumId,
           filePath: where,
@@ -213,12 +215,12 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   // for mediaItemsInDb, create LUT for faster searches
   const mediaItemInDbByGoogleId: StringToMediaItem = {};
   mediaItemsInDb.forEach((mediaItemInDb: MediaItem) => {
-    mediaItemInDbByGoogleId[mediaItemInDb.googleId] = mediaItemInDb;
+    mediaItemInDbByGoogleId[mediaItemInDb.googleMediaItemId] = mediaItemInDb;
   });
 
   const takeoutAlbumMediaItemsByGoogleId: StringToMediaItem = {};
   takeoutAlbumMediaItems.forEach((takeoutAlbumMediaItem: MediaItem) => {
-    takeoutAlbumMediaItemsByGoogleId[takeoutAlbumMediaItem.googleId] = takeoutAlbumMediaItem;
+    takeoutAlbumMediaItemsByGoogleId[takeoutAlbumMediaItem.googleMediaItemId] = takeoutAlbumMediaItem;
   });
 
   // iterate through each item in the album / takeout
@@ -227,7 +229,7 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   //    if identical, do nothing
   //    if changed, replace
   for (const takeoutAlbumMediaItem of takeoutAlbumMediaItems) {
-    const googleIdForTakeoutMediaItem = takeoutAlbumMediaItem.googleId;
+    const googleIdForTakeoutMediaItem = takeoutAlbumMediaItem.googleMediaItemId;
     if (mediaItemInDbByGoogleId.hasOwnProperty(googleIdForTakeoutMediaItem)) {
       // item exists in both - compare
       const mediaItemInDb = mediaItemInDbByGoogleId[googleIdForTakeoutMediaItem];
@@ -245,8 +247,8 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   // iterate through each item in the db
   //    if it doesn't exist in the album / takeout, remove it from the db
   for (const mediaItemInDb of mediaItemsInDb) {
-    if (!takeoutAlbumMediaItemsByGoogleId.hasOwnProperty(mediaItemInDb.googleId)) {
-      deleteMediaItemsFromDb([mediaItemInDb.googleId]);
+    if (!takeoutAlbumMediaItemsByGoogleId.hasOwnProperty(mediaItemInDb.googleMediaItemId)) {
+      deleteMediaItemsFromDb([mediaItemInDb.googleMediaItemId]);
     }
   }
 }
@@ -289,7 +291,8 @@ export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMed
         }
 
         const mediaItem: MediaItem = {
-          googleId: mediaItemMetadataFromGoogleAlbum.id,
+          uniqueId: uuidv4(),
+          googleMediaItemId: mediaItemMetadataFromGoogleAlbum.id,
           fileName: mediaItemMetadataFromGoogleAlbum.filename,
           albumId,
           filePath: '',
@@ -316,7 +319,7 @@ export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMed
 }
 
 const mediaItemsIdentical = (mediaItemFromTakeout: MediaItem, mediaItemFromDb: MediaItem): boolean => {
-  const mediaItemsAreIdentical = mediaItemFromTakeout.googleId === mediaItemFromDb.googleId &&
+  const mediaItemsAreIdentical = mediaItemFromTakeout.googleMediaItemId === mediaItemFromDb.googleMediaItemId &&
     mediaItemFromTakeout.fileName === mediaItemFromDb.fileName &&
     mediaItemFromTakeout.albumId === mediaItemFromDb.albumId &&
     mediaItemFromTakeout.productUrl === mediaItemFromDb.productUrl &&

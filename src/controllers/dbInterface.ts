@@ -42,7 +42,7 @@ export const getAllMediaItemsFromDb = async (): Promise<MediaItem[]> => {
   const documents: any = await (mediaItemModel as any).find().exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleId = document.googleId.toString();
+    mediaItem.googleMediaItemId = document.googleId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -62,14 +62,14 @@ export const getMediaItemsToDisplayFromDb = async (
 
   const mediaItemModel = getMediaitemModel();
 
-  const query = mediaItemModel.find(querySpec).sort( { creationTime: -1 });
+  const query = mediaItemModel.find(querySpec).sort({ creationTime: -1 });
   //   const query = mediaItemModel.find(querySpec).limit(8).sort( { creationTime: -1 });
 
   const documents: any = await query.exec();
   const mediaItems: MediaItem[] = [];
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleId = document.googleId.toString();
+    mediaItem.googleMediaItemId = document.googleId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -141,7 +141,7 @@ export const getMediaItemsToDisplayFromDbUsingSearchSpec = async (
   const mediaItems: MediaItem[] = [];
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleId = document.googleId.toString();
+    mediaItem.googleMediaItemId = document.googleId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -335,7 +335,7 @@ export const getMediaItemsInAlbumFromDb = async (albumId: string): Promise<Media
   const documents: any = await (mediaItemModel as any).find({ albumId }).exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleId = document.googleId.toString();
+    mediaItem.googleMediaItemId = document.googleId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -489,7 +489,7 @@ export const addAutoPersonKeywordsToDb = async (keywordsSet: Set<string>): Promi
 
 export const updateMediaItemInDb = async (mediaItem: MediaItem): Promise<any> => {
   const mediaItemModel = getMediaitemModel();
-  const filter = { googleId: mediaItem.googleId };
+  const filter = { googleId: mediaItem.googleMediaItemId };
   const updatedDoc = await mediaItemModel.findOneAndUpdate(filter, mediaItem, {
     new: true,
   }).exec();
@@ -497,7 +497,7 @@ export const updateMediaItemInDb = async (mediaItem: MediaItem): Promise<any> =>
 
 export const deleteMediaItemsFromDb = async (mediaItemIds: string[]): Promise<any> => {
   const mediaItemModel = getMediaitemModel();
-  const filter = { googleId: { $in: mediaItemIds} };
+  const filter = { googleId: { $in: mediaItemIds } };
   await mediaItemModel.deleteMany(filter);
 }
 
@@ -551,7 +551,7 @@ export const getDeletedMediaItemsFromDb = async (): Promise<MediaItem[]> => {
   const documents: any = await (deletedMediaItemModel as any).find().exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleId = document.googleId.toString();
+    mediaItem.googleMediaItemId = document.googleId.toString();
     deletedMediaItems.push(mediaItem);
   }
   return deletedMediaItems;
