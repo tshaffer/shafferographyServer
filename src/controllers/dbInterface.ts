@@ -69,7 +69,7 @@ export const getMediaItemsToDisplayFromDb = async (
   const mediaItems: MediaItem[] = [];
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();
+    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();  // is this still necessary?
     mediaItems.push(mediaItem);
   }
   return mediaItems;
