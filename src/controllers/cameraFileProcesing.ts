@@ -77,8 +77,8 @@ export const convertHEICFileEndpoint = async (request: Request, response: Respon
 export const getGoogleMediaItem = async (request: Request, response: Response, next: any) => {
   console.log('getGoogleMediaItem');
   console.log(request.query.googleAccessToken);
-  console.log(request.query.googleId);
+  console.log(request.query.googleMediaItemid);
 
-  const retVal = await getMediaItemFromGoogle(request.query.googleAccessToken as string, request.query.googleId as string);
+  const retVal = await getMediaItemFromGoogle(request.query.googleAccessToken as string, request.query.googleMediaItemid as string);
   response.json(retVal);
 }

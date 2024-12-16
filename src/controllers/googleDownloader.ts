@@ -101,11 +101,11 @@ export const downloadMediaItemsMetadata = async (googleAccessToken: string, medi
     const mediaItemResults: any[] = result.mediaItemResults;
 
     for (const mediaItemResult of mediaItemResults) {
-      const googleId = mediaItemResult.mediaItem.id;
-      if (!mediaItemsById.hasOwnProperty(googleId)) {
+      const googleMediaItemId = mediaItemResult.mediaItem.id;
+      if (!mediaItemsById.hasOwnProperty(googleMediaItemId)) {
         debugger;
       }
-      const mediaItem: MediaItem = mediaItemsById[googleId];
+      const mediaItem: MediaItem = mediaItemsById[googleMediaItemId];
       mediaItem.baseUrl = mediaItemResult.mediaItem.baseUrl;
       mediaItem.productUrl = mediaItemResult.mediaItem.productUrl;
       mediaItem.baseUrl = mediaItemResult.mediaItem.baseUrl;
