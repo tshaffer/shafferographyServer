@@ -154,15 +154,16 @@ async function getLocalStorageMediaItem(fullPath: string): Promise<MediaItem> {
 const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaItems: MediaItem[]): Promise<any> => {
 
   // TEDTODO - should not be hard coded
-  const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/tedTaggerServer/public/images';
+  const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/images';
+  const uploadsDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/uploads';
 
   for (const mediaItem of mediaItems) {
     const mediaItemFileName = mediaItem.fileName;
     if (isImageFile(mediaItemFileName)) {
       const fileSuffix = path.extname(mediaItemFileName);
-      const shardedFileName = mediaItem.googleMediaItemId + fileSuffix;
+      const shardedFileName = mediaItem.uniqueId + fileSuffix;
 
-      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleMediaItemId);
+      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.uniqueId);
       // const from = path.join(takeoutFolder, googleFileName);
       const where = path.join(baseDir, shardedFileName);
 
@@ -175,8 +176,8 @@ const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaIt
 
       await addMediaItemToMediaItemsDBTable(mediaItem);
 
-      // const sourcePath: string = path.join(localStorageFolder, mediaItemFileName);
-      const sourcePath: string = mediaItem.filePath;
+      const sourcePath: string = path.join(uploadsDir, mediaItemFileName);
+      // const sourcePath: string = mediaItem.filePath;
       console.log('copy file from: ', sourcePath, ' to: ', where);
       await fsCopyFile(sourcePath, where);
     }

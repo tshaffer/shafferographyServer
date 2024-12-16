@@ -128,7 +128,7 @@ async function convertCreateDateToISO(tags: Tags): Promise<string | null> {
 const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaItems: MediaItem[]): Promise<any> => {
 
   // TEDTODO - should not be hard coded
-  const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/tedTaggerServer/public/images';
+  const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/images';
 
   for (const mediaItem of mediaItems) {
     const mediaItemFileName = mediaItem.fileName;
