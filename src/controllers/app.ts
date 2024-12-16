@@ -32,7 +32,7 @@ import { MatchRule } from 'enums';
 import { importFromTakeout, redownloadGooglePhoto } from './takeouts';
 import { importFromLocalStorage } from './localStorage';
 import path from 'path';
-import { uploadFiles } from './uploadImport';
+import { importFiles, uploadFiles } from './uploadImport';
 
 export const getVersion = (request: Request, response: Response, next: any) => {
   const data: any = {
@@ -274,6 +274,10 @@ export const uploadAndImportEndpoint = async (request: Request, response: Respon
   try {
     const uploadedMediaFilesResponse: UploadMediaFilesResponse = await uploadFiles(request, response);
     const { albumName, files } = uploadedMediaFilesResponse;
+    const filePaths: string[] = files.map((file: Express.Multer.File) => file.path);
+
+    await importFiles(filePaths);
+    
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadAndImportEndpoint:', error);
