@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 
 const MediaitemSchema = new Schema(
   {
-    googleId: { type: String, required: true, unique: true },     // album media metadata: id
+    uniqueId: { type: String, required: true, unique: true },     // unique id
+    googleId: { type: String, required: true },                   // album media metadata: id
     fileName: { type: String, required: true },                   // album media metadata: filename
     albumId: { type: String, required: true },                    // google album that contains this mediaItem
     filePath: { type: String, default: '' },                      // path of location where media file was downloaded
