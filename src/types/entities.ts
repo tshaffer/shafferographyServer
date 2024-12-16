@@ -104,3 +104,8 @@ export interface User {
 export interface UserWithToken extends User {
   accessToken: string;
 }
+
+export interface UploadMediaFilesResponse {
+  albumName: string;
+  files: Express.Multer.File[];
+}

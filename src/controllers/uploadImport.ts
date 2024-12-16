@@ -4,43 +4,45 @@ import multer from 'multer';
 import * as fs from 'fs';
 
 import path from 'path';
+import { UploadMediaFilesResponse } from '../types';
 
-export const uploadFiles = async (request: Request, response: Response) => {
-
-  const storage = multer.diskStorage({
+const upload = multer({
+  storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      // Set upload directory based on the file's relative path
-      const uploadPath = path.join('public/uploads', path.dirname(file.originalname));
-      
-      // Create directory if it doesn't exist
+      const uploadPath = path.join('public/uploads');
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
-  
       cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-      cb(null, path.basename(file.originalname)); // Save file with its original name
-    }
-  });
+      cb(null, file.originalname); // Save file with original name
+    },
+  }),
+});
 
-  const upload = multer({ storage });
-  upload.array('files')(request, response, async (err) => {
-    console.log('upload.array callback');
-    console.log(upload);
-    if (err instanceof multer.MulterError) {
-      console.log('MulterError: ', err);
-      throw err;
-    } else if (err) {
-      console.log('nonMulterError: ', err);
-      throw err;
-    } else {
+export const uploadFiles = async (request: Request, response: Response): Promise<UploadMediaFilesResponse> => {
+  
+  return new Promise((resolve, reject) => {
+    upload.array('files')(request, response, (err) => {
+      if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
+        throw err;
+      } else if (err) {
+        console.error('Unknown error:', err);
+        throw err;
+      }
+
+      const albumName = request.body.albumName; // Multer parses this now
+      console.log('Album Name:', albumName);
+
       console.log('no error on upload');
       console.log(request.files.length);
 
       const uploadedCameraFiles: Express.Multer.File[] = (request as any).files;
       console.log(uploadedCameraFiles);
-    }
-  });
-}
 
+      resolve( { albumName, files: uploadedCameraFiles });
+    });
+  });
+};

@@ -24,7 +24,7 @@ import {
   removeDeleteMediaItemFromDb,
   clearDeletedMediaItemsDb
 } from './dbInterface';
-import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData } from '../types';
+import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData, UploadMediaFilesResponse } from '../types';
 import {
   fsDeleteFiles
 } from '../utilities';
@@ -272,7 +272,8 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
 
 export const uploadAndImportEndpoint = async (request: Request, response: Response, next: any) => {
   try {
-    await uploadFiles(request, response);
+    const uploadedMediaFilesResponse: UploadMediaFilesResponse = await uploadFiles(request, response);
+    const { albumName, files } = uploadedMediaFilesResponse;
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadAndImportEndpoint:', error);

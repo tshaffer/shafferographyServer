@@ -10,6 +10,7 @@ export type TypedResponse<T> = Response & {
   json: (body: T) => Response;
 };
 
+
 // A function to upload a media file
 const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
 
