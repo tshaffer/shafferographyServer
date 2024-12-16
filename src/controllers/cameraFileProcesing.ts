@@ -7,49 +7,43 @@ import path from 'path';
 import { convertHEICFileToJPEGWithEXIF } from './heicConverters';
 import { getMediaItemFromGoogle } from './googlePhotos';
 
-export const uploadRawMediaEndpoint = async (request: Request, response: Response, next: any) => {
-
-  const storage = multer.diskStorage({
+const upload = multer({
+  storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      // Set upload directory based on the file's relative path
-      const uploadPath = path.join('public/uploads', path.dirname(file.originalname));
-      
-      // Create directory if it doesn't exist
+      const uploadPath = path.join('public/uploads');
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
-  
       cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-      cb(null, path.basename(file.originalname)); // Save file with its original name
-    }
-  });
+      cb(null, file.originalname); // Save file with original name
+    },
+  }),
+});
 
-  const upload = multer({ storage });
-  upload.array('files')(request, response, async (err) => {
-    console.log('upload.array callback');
-    console.log(upload);
+export const uploadRawMediaEndpoint = async (request: Request, response: Response) => {
+  upload.array('files')(request, response, (err) => {
     if (err instanceof multer.MulterError) {
-      console.log('MulterError: ', err);
-      return response.status(500).json(err);
+      console.error('Multer error:', err);
+      return response.status(500).json({ error: err.message });
     } else if (err) {
-      console.log('nonMulterError: ', err);
-      return response.status(500).json(err);
-    } else {
-      console.log('no error on upload');
-      console.log(request.files.length);
-
-      const uploadedCameraFiles: Express.Multer.File[] = (request as any).files;
-      console.log(uploadedCameraFiles);
-
-      const responseData = {
-        uploadStatus: 'success',
-      };
-      return response.status(200).send(responseData);
+      console.error('Unknown error:', err);
+      return response.status(500).json({ error: err.message });
     }
+
+    const albumName = request.body.albumName; // Multer parses this now
+    console.log('Album Name:', albumName);
+
+    console.log('no error on upload');
+    console.log(request.files.length);
+
+    const uploadedCameraFiles: Express.Multer.File[] = (request as any).files;
+    console.log(uploadedCameraFiles);
+
+    response.status(200).send({ uploadStatus: 'success', albumName });
   });
-}
+};
 
 export const convertHEICFilesEndpoint = async (request: Request, response: Response, next: any) => {
   // Indicate that this feature is not yet implemented
@@ -84,7 +78,7 @@ export const getGoogleMediaItem = async (request: Request, response: Response, n
   console.log('getGoogleMediaItem');
   console.log(request.query.googleAccessToken);
   console.log(request.query.googleId);
-  
+
   const retVal = await getMediaItemFromGoogle(request.query.googleAccessToken as string, request.query.googleId as string);
   response.json(retVal);
 }

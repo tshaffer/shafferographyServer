@@ -32,6 +32,7 @@ import { MatchRule } from 'enums';
 import { importFromTakeout, redownloadGooglePhoto } from './takeouts';
 import { importFromLocalStorage } from './localStorage';
 import path from 'path';
+import { uploadFiles } from './uploadImport';
 
 export const getVersion = (request: Request, response: Response, next: any) => {
   const data: any = {
@@ -269,3 +270,12 @@ export const importFromLocalStorageEndpoint = async (request: Request, response:
   response.sendStatus(200);
 }
 
+export const uploadAndImportEndpoint = async (request: Request, response: Response, next: any) => {
+  try {
+    await uploadFiles(request, response);
+    response.sendStatus(200);
+  } catch (error) {
+    console.error('Error in uploadAndImportEndpoint:', error);
+    response.status(500).json(error);
+  }
+}
