@@ -495,6 +495,28 @@ export const updateMediaItemInDb = async (mediaItem: MediaItem): Promise<any> =>
   }).exec();
 };
 
+export const updateMediaItemFieldsInDb = async (
+  uniqueId: string,
+  updates: Partial<MediaItem>
+): Promise<any> => {
+  const mediaItemModel = getMediaitemModel();
+
+  try {
+    // Construct the filter
+    const filter = { uniqueId };
+
+    // Perform the update with the fields specified at runtime
+    const updatedDoc = await mediaItemModel
+      .findOneAndUpdate(filter, updates, { new: true }) // `new: true` returns the updated document
+      .exec();
+
+    return updatedDoc;
+  } catch (err) {
+    console.error('Error updating media item:', err);
+    throw err;
+  }
+};
+
 export const deleteMediaItemsFromDb = async (mediaItemIds: string[]): Promise<any> => {
   const mediaItemModel = getMediaitemModel();
   const filter = { uniqueId: { $in: mediaItemIds } };

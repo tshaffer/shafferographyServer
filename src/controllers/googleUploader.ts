@@ -3,14 +3,12 @@ import path from 'path';
 import * as fse from 'fs-extra';
 
 import { GooglePhotoAPIs } from "./googlePhotos";
-import { BatchCreateGoogleMediaItem, CreateGoogleAlbumResponse, CreateMediaItemsResponse, MediaItem, NewMediaItemResult } from '../types';
+import { BatchCreateGoogleMediaItem, CreateGoogleAlbumResponse, CreateMediaItemsResponse, MediaItem, NewMediaItemResult, UploadToGoogleResults } from '../types';
 import { isNil } from 'lodash';
 import { getMediaItemFromDb } from './dbInterface';
 
 // A function to upload a media file
-export const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
-
-  const fileName = path.basename(filePath);
+export const uploadMediaItem = async (googleAccessToken: string, filePath: string, fileName: string): Promise<string> => {
 
   try {
     const mediaBuffer = fse.readFileSync(filePath);
@@ -162,7 +160,7 @@ export const addMediaItemsToAlbum = async (
 // 2. upload media items
 // 3. add media items to album
 // 4. update records in db
-export const uploadToGoogle = async (googleAccessToken: string, albumName: string, mediaItemIds: string[]): Promise<any> => {
+export const uploadToGoogle = async (googleAccessToken: string, albumName: string, mediaItemIds: string[]): Promise<UploadToGoogleResults> => {
   
   console.log('uploadToGoogle: ');
   console.log('googleAccessToken: ', googleAccessToken);
@@ -174,11 +172,12 @@ export const uploadToGoogle = async (googleAccessToken: string, albumName: strin
     // Create Album
     const googleAlbumResponse: CreateGoogleAlbumResponse = await createGoogleAlbum(googleAccessToken, albumName);
     console.log('googleAlbumResponse: ', googleAlbumResponse);
-    const { id, title, productUrl, isWriteable } = googleAlbumResponse;
-    const albumId = id;
+    // const { id, title, productUrl, isWriteable } = googleAlbumResponse;
+    const albumId = googleAlbumResponse.id;
 
     // Upload Media Items
     const createdMediaItemIds: string[] = [];
+    const createdMediaItems: BatchCreateGoogleMediaItem[] = [];
     for (const mediaItemId of mediaItemIds) {
       
       const mediaItem: MediaItem = await getMediaItemFromDb(mediaItemId);
@@ -187,20 +186,18 @@ export const uploadToGoogle = async (googleAccessToken: string, albumName: strin
         throw new Error('Media item not found in db');
       }
 
-      const uploadToken: string = await uploadMediaItem(googleAccessToken, mediaItem.filePath);
+      const uploadToken: string = await uploadMediaItem(googleAccessToken, mediaItem.filePath, mediaItem.fileName);
       console.log('uploadToken: ', uploadToken);
 
       const googleMediaItem: CreateMediaItemsResponse = await createMediaItem(googleAccessToken, uploadToken, mediaItem.fileName);
       console.log('googleMediaItem: ', googleMediaItem);
       const newMediaItemResults: [NewMediaItemResult] = googleMediaItem.newMediaItemResults
       const resultToken = newMediaItemResults[0].uploadToken;
-      console.log('resultToken: ', resultToken);
       const status = newMediaItemResults[0].status;
-      console.log('status: ', status);
       const createdMediaItem: BatchCreateGoogleMediaItem = newMediaItemResults[0].mediaItem;
-      console.log('createdMediaItem: ', createdMediaItem);
       const createdMediaItemId = createdMediaItem.id;
       createdMediaItemIds.push(createdMediaItemId);
+      createdMediaItems.push(createdMediaItem);
     };
 
     console.log('completed uploading mediaItems');
@@ -208,6 +205,8 @@ export const uploadToGoogle = async (googleAccessToken: string, albumName: strin
     // Add Media Items to Album
     await addMediaItemsToAlbum(googleAccessToken, albumId, createdMediaItemIds);
     console.log('successful uploadToGoogle: ');
+
+    return { albumId, mediaItemIds, createdMediaItems};
 
   } catch (error) {
     throw new Error('Failed to upload media to Google');

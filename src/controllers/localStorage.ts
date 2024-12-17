@@ -49,6 +49,7 @@ async function getLocalStorageMediaItem(fullPath: string): Promise<MediaItem> {
     googleMediaItemId: '',
     fileName: path.basename(fullPath),
     albumId: '',
+    albumName: '',
     filePath: fullPath,
     productUrl: null,
     baseUrl: null,

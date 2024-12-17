@@ -103,3 +103,9 @@ export interface NewMediaItemResult {
 export interface CreateMediaItemsResponse {
   newMediaItemResults: [NewMediaItemResult];
 }
+
+export interface UploadToGoogleResults {
+  albumId: string;
+  mediaItemIds: string[];
+  createdMediaItems: BatchCreateGoogleMediaItem[];
+}

@@ -13,6 +13,7 @@ export interface MediaItem {
   googleMediaItemId: string,
   fileName: string,
   albumId: string;
+  albumName: string;
   filePath?: string,
   productUrl?: string,
   baseUrl?: string,

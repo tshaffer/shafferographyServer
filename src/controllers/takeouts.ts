@@ -43,15 +43,15 @@ export const importFromTakeout = async (googleAccessToken: string, albumName: st
   // Step 4
   if (mediaItemsInDb.length === 0) {
     // If there are no mediaItems in the db for this album, add all the mediaItems in the album
-    const addedTakeoutData: AddedTakeoutData = await addAllMediaItemsFromTakeout(googleAccessToken, takeoutFolder, googleMediaItemsInAlbum, albumId);
+    const addedTakeoutData: AddedTakeoutData = await addAllMediaItemsFromTakeout(googleAccessToken, takeoutFolder, googleMediaItemsInAlbum, albumId, albumName);
     return addedTakeoutData;
   } else {
     // There are existing mediaItems in the db for this album. Compare the existing mediaItems in the db with the mediaItems in the album (and the takeout)
-    await mergeMediaItemsFromAlbumWithDb(takeoutFolder, googleMediaItemsInAlbum, albumId, mediaItemsInDb);
+    await mergeMediaItemsFromAlbumWithDb(takeoutFolder, googleMediaItemsInAlbum, albumId, albumName, mediaItemsInDb);
   }
 }
 
-const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string): Promise<AddedTakeoutData> => {
+const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string, albumName: string): Promise<AddedTakeoutData> => {
 
   // TEDTODO - should not be hard coded
   const mediaItemsDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/images';
@@ -168,6 +168,7 @@ const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFol
           googleMediaItemId: mediaItemMetadataFromGoogleAlbum.id,
           fileName: mediaItemMetadataFromGoogleAlbum.filename,
           albumId,
+          albumName,
           filePath: where,
           productUrl: valueOrNull(mediaItemMetadataFromGoogleAlbum.productUrl),
           baseUrl: valueOrNull(mediaItemMetadataFromGoogleAlbum.baseUrl),
@@ -203,14 +204,14 @@ const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFol
   return addedTakeoutData;
 }
 
-export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string, mediaItemsInDb: MediaItem[]) => {
+export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string, albumName: string, mediaItemsInDb: MediaItem[]) => {
 
   // retrieve metadata files and image files from takeout folder
   takeoutFolder = path.join('public/takeouts', takeoutFolder);
   console.log('takeoutFolder', takeoutFolder);
 
   // get the items from the album / takeout
-  const takeoutAlbumMediaItems: MediaItem[] = await getTakeoutAlbumMediaItems(takeoutFolder, googleMediaItemsInAlbum, albumId);
+  const takeoutAlbumMediaItems: MediaItem[] = await getTakeoutAlbumMediaItems(takeoutFolder, googleMediaItemsInAlbum, albumId, albumName);
 
   // for mediaItemsInDb, create LUT for faster searches
   const mediaItemInDbByGoogleId: StringToMediaItem = {};
@@ -253,7 +254,7 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   }
 }
 
-export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string): Promise<MediaItem[]> => {
+export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMediaItemsInAlbum: GoogleMediaItem[], albumId: string, albumName: string): Promise<MediaItem[]> => {
 
   const mediaItems: MediaItem[] = [];
 
@@ -295,6 +296,7 @@ export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMed
           googleMediaItemId: mediaItemMetadataFromGoogleAlbum.id,
           fileName: mediaItemMetadataFromGoogleAlbum.filename,
           albumId,
+          albumName,
           filePath: '',
           productUrl: valueOrNull(mediaItemMetadataFromGoogleAlbum.productUrl),
           mimeType: valueOrNull(mediaItemMetadataFromGoogleAlbum.mimeType),
