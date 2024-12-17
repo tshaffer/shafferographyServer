@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { CreateGoogleAlbumResponse, CreateMediaItemsResponse, MediaItem, UploadToGoogleResults } from '../types';
 import { uploadMediaItem, createMediaItem, addMediaItemsToAlbum, createGoogleAlbum, uploadToGoogle } from './googleUploader';
-import { updateMediaItemFieldsInDb } from './dbInterface';
+import { getAlbumNamesWherePeopleNotRetrieved, updateMediaItemFieldsInDb } from './dbInterface';
 
 export type TypedResponse<T> = Response & {
   json: (body: T) => Response;
@@ -102,3 +102,11 @@ export const uploadToGoogleEndpoint = async (request: Request, response: TypedRe
   }
 }
 
+export const getAlbumNamesWherePeopleNotRetrievedEndpoint = async (request: Request, response: TypedResponse<string[]>, next: any) => {
+  try {
+    const albumNames = await getAlbumNamesWherePeopleNotRetrieved();
+    response.status(200).json(albumNames); 
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
+}

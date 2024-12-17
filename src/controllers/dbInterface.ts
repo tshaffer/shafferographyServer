@@ -579,3 +579,18 @@ export const getDeletedMediaItemsFromDb = async (): Promise<MediaItem[]> => {
   return deletedMediaItems;
 }
 
+export const getAlbumNamesWherePeopleNotRetrieved = async (): Promise<string[]> => {
+  const mediaItemModel = getMediaitemModel();
+
+  try {
+    // Query the collection to find distinct album names
+    const albumNames = await mediaItemModel.distinct('albumName', {
+      peopleRetrievedFromGoogle: false,
+    });
+
+    return albumNames; // Returns an array of album names
+  } catch (error) {
+    console.error('Error retrieving albums:', error);
+    throw error;
+  }
+};
