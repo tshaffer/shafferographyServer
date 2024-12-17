@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { CreateGoogleAlbumResponse, CreateMediaItemsResponse } from '../types';
-import { uploadMediaItem, createMediaItem, uploadToGoogle, addMediaItemsToAlbum, createGoogleAlbum } from './googleUploader';
+import { uploadMediaItem, createMediaItem, addMediaItemsToAlbum, createGoogleAlbum, uploadToGoogle } from './googleUploader';
 
 export type TypedResponse<T> = Response & {
   json: (body: T) => Response;
@@ -48,14 +48,6 @@ export const addMediaItemsToAlbumEndpoint = async (request: Request, response: R
   }
 }
 
-export const uploadToGoogleEndpoint = async (request: Request, response: TypedResponse<CreateMediaItemsResponse>, next: any) => {
-  const googleAccessToken = request.body.googleAccessToken;
-  const albumName = request.body.albumName;
-  const mediaItemIds = request.body.mediaItemIds;
-
-  await uploadToGoogle(googleAccessToken, albumName, mediaItemIds);
-}
-
 export const createGoogleAlbumEndpoint = async (
   request: Request,
   response: TypedResponse<CreateGoogleAlbumResponse>) => {
@@ -74,5 +66,19 @@ export const createGoogleAlbumEndpoint = async (
   } catch (error) {
     response.status(500).json({ message: error.message });
   }
+}
+
+export const uploadToGoogleEndpoint = async (request: Request, response: TypedResponse<CreateMediaItemsResponse>, next: any) => {
+
+  const googleAccessToken = request.body.googleAccessToken;
+  const albumName = request.body.albumName;
+  const mediaItemIds = request.body.mediaItemIds;
+
+  console.log('uploadToGoogleEndpoint: ');
+  console.log('googleAccessToken: ', googleAccessToken);
+  console.log('albumName: ', albumName);
+  console.log('mediaItemIds: ', mediaItemIds);
+
+  await uploadToGoogle(googleAccessToken, albumName, mediaItemIds);
 }
 

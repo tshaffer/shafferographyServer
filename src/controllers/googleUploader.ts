@@ -3,7 +3,9 @@ import path from 'path';
 import * as fse from 'fs-extra';
 
 import { GooglePhotoAPIs } from "./googlePhotos";
-import { CreateGoogleAlbumResponse, CreateMediaItemsResponse } from '../types';
+import { BatchCreateGoogleMediaItem, CreateGoogleAlbumResponse, CreateMediaItemsResponse, MediaItem, NewMediaItemResult } from '../types';
+import { isNil } from 'lodash';
+import { getMediaItemFromDb } from './dbInterface';
 
 // A function to upload a media file
 export const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
@@ -155,11 +157,59 @@ export const addMediaItemsToAlbum = async (
   }
 };
 
+// steps
+// 1. create album
+// 2. upload media items
+// 3. add media items to album
+// 4. update records in db
 export const uploadToGoogle = async (googleAccessToken: string, albumName: string, mediaItemIds: string[]): Promise<any> => {
+  
   console.log('uploadToGoogle: ');
   console.log('googleAccessToken: ', googleAccessToken);
   console.log('albumName: ', albumName);
   console.log('mediaItemIds: ', mediaItemIds);
+
+  try {
+
+    // Create Album
+    const googleAlbumResponse: CreateGoogleAlbumResponse = await createGoogleAlbum(googleAccessToken, albumName);
+    console.log('googleAlbumResponse: ', googleAlbumResponse);
+    const { id, title, productUrl, isWriteable } = googleAlbumResponse;
+    const albumId = id;
+
+    // Upload Media Items
+    const createdMediaItemIds: string[] = [];
+    mediaItemIds.forEach(async (mediaItemId: string) => {
+      
+      const mediaItem: MediaItem = await getMediaItemFromDb(mediaItemId);
+      if (isNil(mediaItem)) {
+        throw new Error('Media item not found in db');
+      }
+
+      const uploadToken: string = await uploadMediaItem(googleAccessToken, mediaItem.filePath);
+      console.log('uploadToken: ', uploadToken);
+
+      const googleMediaItem: CreateMediaItemsResponse = await createMediaItem(googleAccessToken, uploadToken, mediaItem.fileName);
+      console.log('googleMediaItem: ', googleMediaItem);
+      const newMediaItemResults: [NewMediaItemResult] = googleMediaItem.newMediaItemResults
+      const resultToken = newMediaItemResults[0].uploadToken;
+      console.log('resultToken: ', resultToken);
+      const status = newMediaItemResults[0].status;
+      console.log('status: ', status);
+      const createdMediaItem: BatchCreateGoogleMediaItem = newMediaItemResults[0].mediaItem;
+      console.log('createdMediaItem: ', createdMediaItem);
+      const createdMediaItemId = createdMediaItem.id;
+      createdMediaItemIds.push(createdMediaItemId);
+    });
+
+    // Add Media Items to Album
+    await addMediaItemsToAlbum(googleAccessToken, albumId, createdMediaItemIds);
+    console.log('successful uploadToGoogle: ');
+    
+  } catch (error) {
+    throw new Error('Failed to upload media to Google');
+  }
+
 }
 
 
