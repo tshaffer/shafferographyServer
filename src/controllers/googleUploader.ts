@@ -179,10 +179,11 @@ export const uploadToGoogle = async (googleAccessToken: string, albumName: strin
 
     // Upload Media Items
     const createdMediaItemIds: string[] = [];
-    mediaItemIds.forEach(async (mediaItemId: string) => {
+    for (const mediaItemId of mediaItemIds) {
       
       const mediaItem: MediaItem = await getMediaItemFromDb(mediaItemId);
       if (isNil(mediaItem)) {
+        console.error('Media item not found in db');
         throw new Error('Media item not found in db');
       }
 
@@ -200,12 +201,14 @@ export const uploadToGoogle = async (googleAccessToken: string, albumName: strin
       console.log('createdMediaItem: ', createdMediaItem);
       const createdMediaItemId = createdMediaItem.id;
       createdMediaItemIds.push(createdMediaItemId);
-    });
+    };
+
+    console.log('completed uploading mediaItems');
 
     // Add Media Items to Album
     await addMediaItemsToAlbum(googleAccessToken, albumId, createdMediaItemIds);
     console.log('successful uploadToGoogle: ');
-    
+
   } catch (error) {
     throw new Error('Failed to upload media to Google');
   }
