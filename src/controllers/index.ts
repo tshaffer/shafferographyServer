@@ -2,6 +2,7 @@ export * from './app';
 export * from './cameraFileProcesing';
 export * from './dbInterface';
 export * from './googleDownloader';
+export * from './googleHandlers';
 export * from './googlePhotos';
 export * from './googleUploader';
 export * from './googleUtils';

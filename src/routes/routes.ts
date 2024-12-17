@@ -28,7 +28,7 @@ import {
   redownloadMediaItemEndpoint,
   getLocalDriveImportFolders,
   importFromLocalStorageEndpoint,
-  uploadGoogleMediaItem,
+  uploadGoogleMediaItemEndpoint,
   uploadRawMediaEndpoint,
   convertHEICFileEndpoint,
   convertHEICFilesEndpoint,
@@ -81,7 +81,7 @@ export const createRoutes = (app: express.Application) => {
 
   app.post('/api/v1/redownloadMediaItem', redownloadMediaItemEndpoint);
 
-  app.post('/api/v1/uploadMediaItem', uploadGoogleMediaItem);
+  app.post('/api/v1/uploadMediaItem', uploadGoogleMediaItemEndpoint);
   app.post('/api/v1/uploadRawMedia', uploadRawMediaEndpoint);
   app.post('/api/v1/convertHEICFiles', convertHEICFilesEndpoint);
   app.post('/api/v1/convertHEICFile', convertHEICFileEndpoint);
@@ -93,6 +93,6 @@ export const createRoutes = (app: express.Application) => {
   app.post('/api/v1/createGoogleAlbum', createGoogleAlbumEndpoint);
   app.post('/api/v1/addMediaItemsToAlbum', addMediaItemsToAlbumEndpoint);
   app.post('/api/v1/uploadToGoogle', uploadToGoogleEndpoint);
-  
+
 };
 

@@ -1,17 +1,12 @@
 import axios from 'axios';
 import path from 'path';
 import * as fse from 'fs-extra';
-import { Request, Response } from 'express';
 
 import { GooglePhotoAPIs } from "./googlePhotos";
 import { CreateGoogleAlbumResponse, CreateMediaItemsResponse } from '../types';
 
-export type TypedResponse<T> = Response & {
-  json: (body: T) => Response;
-};
-
 // A function to upload a media file
-const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
+export const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
 
   const fileName = path.basename(filePath);
 
@@ -30,7 +25,7 @@ const uploadMediaItem = async (googleAccessToken: string, filePath: string): Pro
 }
 
 // A function to create a media item using the upload token
-const createMediaItem = async (googleAccessToken: string, uploadToken: string, description: string): Promise<CreateMediaItemsResponse> => {
+export const createMediaItem = async (googleAccessToken: string, uploadToken: string, description: string): Promise<CreateMediaItemsResponse> => {
   try {
 
     const url = GooglePhotoAPIs.batchCreate;
@@ -63,27 +58,6 @@ const createMediaItem = async (googleAccessToken: string, uploadToken: string, d
   }
 }
 
-export const uploadGoogleMediaItem = async (request: Request, response: TypedResponse<CreateMediaItemsResponse>, next: any) => {
-  const googleAccessToken = request.body.googleAccessToken;
-  const filePath = request.body.filePath;
-  const description = request.body.description || 'Uploaded via Shafferography';
-
-  console.log('uploadGoogleMediaItem: ');
-  console.log('googleAccessToken: ', googleAccessToken);
-  console.log('filePath: ', filePath);
-  console.log('description: ', description);
-
-  try {
-    const uploadToken = await uploadMediaItem(googleAccessToken, filePath);
-    console.log('uploadToken: ', uploadToken);
-    const mediaItem: CreateMediaItemsResponse = await createMediaItem(googleAccessToken, uploadToken, description);
-    console.log('mediaItem: ', mediaItem);
-    response.status(200).json(mediaItem);
-  } catch (error) {
-    response.status(500).json({ message: error.message });
-  }
-}
-
 const postGoogleRequest = async (googleAccessToken: string, url: string, fileName: string, data: any): Promise<any> => {
 
   const headers = {
@@ -109,26 +83,6 @@ const postGoogleRequest = async (googleAccessToken: string, url: string, fileNam
       console.log('err: ', err);
       return Promise.reject(err);
     });
-}
-
-export const createGoogleAlbumEndpoint = async (
-  request: Request,
-  response: TypedResponse<CreateGoogleAlbumResponse>) => {
-
-  const googleAccessToken = request.body.googleAccessToken;
-  const albumName = request.body.albumName;
-
-  console.log('createGoogleAlbumEndpoint: ');
-  console.log('googleAccessToken: ', googleAccessToken);
-  console.log('albumName: ', albumName);
-
-  try {
-    const googleAlbumResponse: CreateGoogleAlbumResponse = await createGoogleAlbum(googleAccessToken, albumName);
-    console.log('googleAlbumResponse: ', googleAlbumResponse);
-    response.status(200).json(googleAlbumResponse);
-  } catch (error) {
-    response.status(500).json({ message: error.message });
-  }
 }
 
 export const createGoogleAlbum = async (googleAccessToken: string, albumName: string): Promise<CreateGoogleAlbumResponse> => {
@@ -161,26 +115,6 @@ export const createGoogleAlbum = async (googleAccessToken: string, albumName: st
   } catch (error) {
     console.error('Error creating album:', error.response ? error.response.data : error);
     throw new Error('Failed to create album');
-  }
-}
-
-export const addMediaItemsToAlbumEndpoint = async (request: Request, response: Response, next: any) => {
-
-  const googleAccessToken = request.body.googleAccessToken;
-  const albumId = request.body.albumId;
-  const mediaItemIds = request.body.mediaItemIds;
-
-  console.log('addMediaItemsToAlbumEndpoint: ');
-  console.log('googleAccessToken: ', googleAccessToken);
-  console.log('albumId: ', albumId);
-  console.log('mediaItemIds: ', mediaItemIds);
-
-  try {
-    await addMediaItemsToAlbum(googleAccessToken, albumId, mediaItemIds);
-    console.log('successful addMediaItemsToAlbumEndpoint: ');
-    response.sendStatus(200);
-  } catch (error) {
-    response.status(500).json({ message: error.message });
   }
 }
 
@@ -220,14 +154,6 @@ export const addMediaItemsToAlbum = async (
     }
   }
 };
-
-export const uploadToGoogleEndpoint = async (request: Request, response: TypedResponse<CreateMediaItemsResponse>, next: any) => {
-  const googleAccessToken = request.body.googleAccessToken;
-  const albumName = request.body.albumName;
-  const mediaItemIds = request.body.mediaItemIds;
-
-  await uploadToGoogle(googleAccessToken, albumName, mediaItemIds);
-}
 
 export const uploadToGoogle = async (googleAccessToken: string, albumName: string, mediaItemIds: string[]): Promise<any> => {
   console.log('uploadToGoogle: ');
