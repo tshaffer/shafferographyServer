@@ -63,6 +63,7 @@ async function getLocalStorageMediaItem(fullPath: string): Promise<MediaItem> {
     description: null,
     geoData,
     people: null,
+    peopleRetrievedFromGoogle: false,
     keywordNodeIds: []
   }
 

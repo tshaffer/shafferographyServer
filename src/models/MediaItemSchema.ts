@@ -26,6 +26,7 @@ const MediaitemSchema = new Schema(
       longitude: { type: Number },
       longitudeSpan: { type: Number },
     },
+    peopleRetrievedFromGoogle: { type: Boolean, required: true }, // flag to indicate if people have been retrieved from google
     people: [{                                                    // takeout metadata: people
       name: String, default: ''
     }],

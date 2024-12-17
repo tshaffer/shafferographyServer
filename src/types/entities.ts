@@ -25,6 +25,7 @@ export interface MediaItem {
   description?: string,
   geoData?: GeoData,
   people?: string[],
+  peopleRetrievedFromGoogle: boolean,
   keywordNodeIds: string[],
 }
 

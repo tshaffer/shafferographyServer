@@ -182,6 +182,7 @@ const addAllMediaItemsFromTakeout = async (googleAccessToken: string, takeoutFol
           description: valueOrNull(takeoutMetadata.description),
           geoData: valueOrNull(takeoutMetadata.geoData),
           people: valueOrNull(takeoutMetadata.people),
+          peopleRetrievedFromGoogle: true,
           keywordNodeIds,
         }
 
@@ -308,6 +309,7 @@ export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMed
           description: valueOrNull(takeoutMetadata.description),
           geoData: valueOrNull(takeoutMetadata.geoData),
           people: valueOrNull(takeoutMetadata.people),
+          peopleRetrievedFromGoogle: true,
           keywordNodeIds: [],
         }
 
