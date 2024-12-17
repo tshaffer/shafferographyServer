@@ -215,12 +215,12 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   // for mediaItemsInDb, create LUT for faster searches
   const mediaItemInDbByGoogleId: StringToMediaItem = {};
   mediaItemsInDb.forEach((mediaItemInDb: MediaItem) => {
-    mediaItemInDbByGoogleId[mediaItemInDb.googleMediaItemId] = mediaItemInDb;
+    mediaItemInDbByGoogleId[mediaItemInDb.uniqueId] = mediaItemInDb;
   });
 
   const takeoutAlbumMediaItemsByGoogleId: StringToMediaItem = {};
   takeoutAlbumMediaItems.forEach((takeoutAlbumMediaItem: MediaItem) => {
-    takeoutAlbumMediaItemsByGoogleId[takeoutAlbumMediaItem.googleMediaItemId] = takeoutAlbumMediaItem;
+    takeoutAlbumMediaItemsByGoogleId[takeoutAlbumMediaItem.uniqueId] = takeoutAlbumMediaItem;
   });
 
   // iterate through each item in the album / takeout
@@ -229,7 +229,7 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   //    if identical, do nothing
   //    if changed, replace
   for (const takeoutAlbumMediaItem of takeoutAlbumMediaItems) {
-    const googleIdForTakeoutMediaItem = takeoutAlbumMediaItem.googleMediaItemId;
+    const googleIdForTakeoutMediaItem = takeoutAlbumMediaItem.uniqueId;
     if (mediaItemInDbByGoogleId.hasOwnProperty(googleIdForTakeoutMediaItem)) {
       // item exists in both - compare
       const mediaItemInDb = mediaItemInDbByGoogleId[googleIdForTakeoutMediaItem];
@@ -247,8 +247,8 @@ export const mergeMediaItemsFromAlbumWithDb = async (takeoutFolder: string, goog
   // iterate through each item in the db
   //    if it doesn't exist in the album / takeout, remove it from the db
   for (const mediaItemInDb of mediaItemsInDb) {
-    if (!takeoutAlbumMediaItemsByGoogleId.hasOwnProperty(mediaItemInDb.googleMediaItemId)) {
-      deleteMediaItemsFromDb([mediaItemInDb.googleMediaItemId]);
+    if (!takeoutAlbumMediaItemsByGoogleId.hasOwnProperty(mediaItemInDb.uniqueId)) {
+      deleteMediaItemsFromDb([mediaItemInDb.uniqueId]);
     }
   }
 }
@@ -319,7 +319,8 @@ export const getTakeoutAlbumMediaItems = async (takeoutFolder: string, googleMed
 }
 
 const mediaItemsIdentical = (mediaItemFromTakeout: MediaItem, mediaItemFromDb: MediaItem): boolean => {
-  const mediaItemsAreIdentical = mediaItemFromTakeout.googleMediaItemId === mediaItemFromDb.googleMediaItemId &&
+  const mediaItemsAreIdentical = mediaItemFromTakeout.uniqueId === mediaItemFromDb.uniqueId &&
+    mediaItemFromTakeout.googleMediaItemId === mediaItemFromDb.googleMediaItemId &&
     mediaItemFromTakeout.fileName === mediaItemFromDb.fileName &&
     mediaItemFromTakeout.albumId === mediaItemFromDb.albumId &&
     mediaItemFromTakeout.productUrl === mediaItemFromDb.productUrl &&

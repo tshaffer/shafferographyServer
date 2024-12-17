@@ -28,7 +28,7 @@ import { getTakeoutModel } from '../models';
 
 export const getMediaItemFromDb = async (mediaItemId: string): Promise<MediaItem> => {
   const mediaItemModel = getMediaitemModel();
-  const filter = { googleMediaItemId: mediaItemId };
+  const filter = { uniqueId: mediaItemId };
   const mediaItemDocument: Document = await mediaItemModel.findOne(filter);
   const mediaItem: MediaItem = mediaItemDocument.toObject() as MediaItem;
   return mediaItem;
@@ -42,7 +42,7 @@ export const getAllMediaItemsFromDb = async (): Promise<MediaItem[]> => {
   const documents: any = await (mediaItemModel as any).find().exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();
+    mediaItem.uniqueId = document.uniqueId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -69,7 +69,7 @@ export const getMediaItemsToDisplayFromDb = async (
   const mediaItems: MediaItem[] = [];
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();  // is this still necessary?
+    mediaItem.uniqueId = document.uniqueId.toString();  // is this still necessary?
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -141,7 +141,7 @@ export const getMediaItemsToDisplayFromDbUsingSearchSpec = async (
   const mediaItems: MediaItem[] = [];
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();
+    mediaItem.uniqueId = document.uniqueId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -335,7 +335,7 @@ export const getMediaItemsInAlbumFromDb = async (albumId: string): Promise<Media
   const documents: any = await (mediaItemModel as any).find({ albumId }).exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();
+    mediaItem.uniqueId = document.uniqueId.toString();
     mediaItems.push(mediaItem);
   }
   return mediaItems;
@@ -489,7 +489,7 @@ export const addAutoPersonKeywordsToDb = async (keywordsSet: Set<string>): Promi
 
 export const updateMediaItemInDb = async (mediaItem: MediaItem): Promise<any> => {
   const mediaItemModel = getMediaitemModel();
-  const filter = { googleMediaItemId: mediaItem.googleMediaItemId };
+  const filter = { uniqueId: mediaItem.uniqueId };
   const updatedDoc = await mediaItemModel.findOneAndUpdate(filter, mediaItem, {
     new: true,
   }).exec();
@@ -497,7 +497,7 @@ export const updateMediaItemInDb = async (mediaItem: MediaItem): Promise<any> =>
 
 export const deleteMediaItemsFromDb = async (mediaItemIds: string[]): Promise<any> => {
   const mediaItemModel = getMediaitemModel();
-  const filter = { googleMediaItemId: { $in: mediaItemIds } };
+  const filter = { uniqueId: { $in: mediaItemIds } };
   await mediaItemModel.deleteMany(filter);
 }
 
@@ -539,7 +539,7 @@ export const clearDeletedMediaItemsDb = async (): Promise<any> => {
 
 export const removeDeleteMediaItemFromDb = async (mediaItemId: string): Promise<any> => {
   const deletedMediaItemModel = getDeletedMediaItemModel();
-  const filter = { googleMediaItemId: mediaItemId };
+  const filter = { uniqueId: mediaItemId };
   await deletedMediaItemModel.deleteOne(filter);
 }
 
@@ -551,7 +551,7 @@ export const getDeletedMediaItemsFromDb = async (): Promise<MediaItem[]> => {
   const documents: any = await (deletedMediaItemModel as any).find().exec();
   for (const document of documents) {
     const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.googleMediaItemId = document.googleMediaItemId.toString();
+    mediaItem.uniqueId = document.uniqueId.toString();
     deletedMediaItems.push(mediaItem);
   }
   return deletedMediaItems;

@@ -134,9 +134,9 @@ const addMediaItemsFromLocalStorage = async (localStorageFolder: string, mediaIt
     const mediaItemFileName = mediaItem.fileName;
     if (isImageFile(mediaItemFileName)) {
       const fileSuffix = path.extname(mediaItemFileName);
-      const shardedFileName = mediaItem.googleMediaItemId + fileSuffix;
+      const shardedFileName = mediaItem.uniqueId + fileSuffix;
 
-      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.googleMediaItemId);
+      const baseDir: string = await getShardedDirectory(mediaItemsDir, mediaItem.uniqueId);
       // const from = path.join(takeoutFolder, googleFileName);
       const where = path.join(baseDir, shardedFileName);
 
