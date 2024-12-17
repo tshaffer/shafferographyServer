@@ -10,7 +10,6 @@ export type TypedResponse<T> = Response & {
   json: (body: T) => Response;
 };
 
-
 // A function to upload a media file
 const uploadMediaItem = async (googleAccessToken: string, filePath: string): Promise<string> => {
 
@@ -221,6 +220,21 @@ export const addMediaItemsToAlbum = async (
     }
   }
 };
+
+export const uploadToGoogleEndpoint = async (request: Request, response: TypedResponse<CreateMediaItemsResponse>, next: any) => {
+  const googleAccessToken = request.body.googleAccessToken;
+  const albumName = request.body.albumName;
+  const mediaItemIds = request.body.mediaItemIds;
+
+  await uploadToGoogle(googleAccessToken, albumName, mediaItemIds);
+}
+
+export const uploadToGoogle = async (googleAccessToken: string, albumName: string, mediaItemIds: string[]): Promise<any> => {
+  console.log('uploadToGoogle: ');
+  console.log('googleAccessToken: ', googleAccessToken);
+  console.log('albumName: ', albumName);
+  console.log('mediaItemIds: ', mediaItemIds);
+}
 
 
 

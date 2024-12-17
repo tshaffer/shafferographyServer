@@ -36,6 +36,7 @@ import {
   createGoogleAlbumEndpoint,
   addMediaItemsToAlbumEndpoint,
   uploadAndImportEndpoint,
+  uploadToGoogleEndpoint,
 } from '../controllers';
 import { createPhotosToDisplaySpec } from '../utilities/utilities';
 
@@ -91,5 +92,7 @@ export const createRoutes = (app: express.Application) => {
 
   app.post('/api/v1/createGoogleAlbum', createGoogleAlbumEndpoint);
   app.post('/api/v1/addMediaItemsToAlbum', addMediaItemsToAlbumEndpoint);
+  app.post('/api/v1/uploadToGoogle', uploadToGoogleEndpoint);
+  
 };
 
