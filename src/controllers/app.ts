@@ -287,7 +287,23 @@ export const uploadAndImportEndpoint = async (request: Request, response: Respon
 
 export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: Response, next: any) => {
   try {
-    await uploadPeopleTakeoutFiles(request, response);
+    const uploadedPeopleTakeoutFiles: Express.Multer.File[] = await uploadPeopleTakeoutFiles(request, response);
+
+    let albumName: string = '';
+
+    for (const uploadedPeopleTakeoutFile of uploadedPeopleTakeoutFiles) {
+      if (uploadedPeopleTakeoutFile.filename === 'metadata.json') {
+        const metadataFilePath: string = uploadedPeopleTakeoutFile.path;
+        const metadataFileContents: string = fs.readFileSync(metadataFilePath, 'utf8');
+        const metadata = JSON.parse(metadataFileContents);
+        albumName = metadata.title;
+        console.log('metadata.json:');
+        console.log(metadataFilePath);
+        console.log(metadataFileContents);
+        console.log(metadata);
+        console.log('albumName:', albumName);
+      }
+    }
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadPeopleTakeoutsEndpoint:', error);

@@ -68,7 +68,7 @@ export const uploadFiles = async (request: Request, response: Response): Promise
   });
 };
 
-export const uploadPeopleTakeoutFiles = async (request: Request, response: Response): Promise<void> => {
+export const uploadPeopleTakeoutFiles = async (request: Request, response: Response): Promise<Express.Multer.File[]> => {
 
   return new Promise((resolve, reject) => {
     uploadPeopleTakeoutFile.array('files')(request, response, (err) => {
@@ -82,8 +82,12 @@ export const uploadPeopleTakeoutFiles = async (request: Request, response: Respo
 
       console.log('no error on uploadPeopleTakeoutFile');
       console.log(request.files.length);
+      console.log(request.files);
 
-      resolve();
+      const uploadedPeopleTakeoutFiles: Express.Multer.File[] = (request as any).files;
+      console.log(uploadedPeopleTakeoutFiles);
+
+      resolve(uploadedPeopleTakeoutFiles);
     });
   });
 };
