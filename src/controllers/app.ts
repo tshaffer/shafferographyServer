@@ -23,17 +23,22 @@ import {
   getDeletedMediaItemsFromDb,
   removeDeleteMediaItemFromDb,
   clearDeletedMediaItemsDb,
-  getMediaItemsInNamedAlbumFromDb
+  getMediaItemsInNamedAlbumFromDb,
+  addAutoPersonKeywordsToDb,
+  getAutoPersonKeywordNodesFromDb,
+  getKeywordsFromDb
 } from './dbInterface';
-import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData, UploadMediaFilesResponse } from '../types';
+import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData, UploadMediaFilesResponse, StringToStringLUT } from '../types';
 import {
-  fsDeleteFiles
+  fsDeleteFiles,
+  getJsonFromFile
 } from '../utilities';
 import { MatchRule } from 'enums';
 import { importFromTakeout, redownloadGooglePhoto } from './takeouts';
 import { importFromLocalStorage } from './localStorage';
 import path from 'path';
 import { importFiles, uploadFiles, uploadPeopleTakeoutFiles } from './uploadImport';
+import { isNil } from 'lodash';
 
 export const getVersion = (request: Request, response: Response, next: any) => {
   const data: any = {
@@ -312,9 +317,63 @@ export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: R
     }
 
     const mediaItemsInAlbum: MediaItem[] = await getMediaItemsInNamedAlbumFromDb(albumName);
+
+    const personKeywordNames: Set<string> = new Set<string>();
+
     for (const mediaItemInAlbum of mediaItemsInAlbum) {
-      const pathToMediaMetadata: string = path.join(peopleTakeoutFilesDir, mediaItemInAlbum.fileName + '.json');
-      console.log('pathToMediaMetadata:', pathToMediaMetadata);
+      const takeoutMetaDataFilePath: string = path.join(peopleTakeoutFilesDir, mediaItemInAlbum.fileName + '.json');
+      const takeoutMetadata: any = await getJsonFromFile(takeoutMetaDataFilePath);
+      if (!isNil(takeoutMetadata.people)) {
+        takeoutMetadata.people.forEach((person: any) => {
+          personKeywordNames.add(person.name);
+        });
+      }
+    }
+
+    let addedKeywordData: KeywordData = null;
+    const addedMediaItems: MediaItem[] = [];
+
+    if (personKeywordNames.size > 0) {
+      addedKeywordData = await (addAutoPersonKeywordsToDb(personKeywordNames));
+    }
+
+    const keywords: Keyword[] = await getKeywordsFromDb();
+
+    const autoPersonKeywordNodes: KeywordNode[] = await getAutoPersonKeywordNodesFromDb();
+
+    const personNameToAutoPersonKeywordNodeId: StringToStringLUT = {};
+    personKeywordNames.forEach((personName: string) => {
+      autoPersonKeywordNodes.forEach((autoPersonKeywordNode: KeywordNode) => {
+        const autoPersonKeywordId: string = autoPersonKeywordNode.keywordId;
+        const keyword: Keyword = keywords.find((keyword: Keyword) => keyword.keywordId === autoPersonKeywordId);
+        if (keyword.label === personName) {
+          personNameToAutoPersonKeywordNodeId[personName] = autoPersonKeywordNode.nodeId;
+        }
+      });
+    });
+
+    const keywordIdByKeywordLabel: StringToStringLUT = {};
+    keywords.forEach((keyword: Keyword) => {
+      keywordIdByKeywordLabel[keyword.label] = keyword.keywordId;
+    })
+
+    for (const mediaItemInAlbum of mediaItemsInAlbum) {
+      const takeoutMetaDataFilePath: string = path.join(peopleTakeoutFilesDir, mediaItemInAlbum.fileName + '.json');
+      const takeoutMetadata: any = await getJsonFromFile(takeoutMetaDataFilePath);
+
+      const keywordNodeIds: string[] = [];
+
+      if (!isNil(takeoutMetadata.people)) {
+        takeoutMetadata.people.forEach((person: any) => {
+          const name: string = person.name;
+          keywordNodeIds.push(personNameToAutoPersonKeywordNodeId[name]);
+        })
+      }
+
+      const people: string[]| null = takeoutMetadata.people ? takeoutMetadata.people : null;
+
+      console.log('peole', people);
+      console.log('keywordNodeIds', keywordNodeIds);
     }
 
     response.sendStatus(200);
