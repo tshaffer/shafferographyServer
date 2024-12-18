@@ -325,22 +325,6 @@ export const getTakeoutById = async (takeoutId: string): Promise<Takeout> => {
   return null;
 }
 
-
-
-export const getMediaItemsInAlbumFromDb = async (albumId: string): Promise<MediaItem[]> => {
-
-  const mediaItemModel = getMediaitemModel();
-
-  const mediaItems: MediaItem[] = [];
-  const documents: any = await (mediaItemModel as any).find({ albumId }).exec();
-  for (const document of documents) {
-    const mediaItem: MediaItem = document.toObject() as MediaItem;
-    mediaItem.uniqueId = document.uniqueId.toString();
-    mediaItems.push(mediaItem);
-  }
-  return mediaItems;
-}
-
 export const updateKeywordNodeDb = async (keywordNode: KeywordNode): Promise<any> => {
   const keywordNodeModel = getKeywordNodeModel();
   const filter = { nodeId: keywordNode.nodeId };
@@ -594,3 +578,29 @@ export const getAlbumNamesWherePeopleNotRetrieved = async (): Promise<string[]> 
     throw error;
   }
 };
+
+export const getMediaItemsInAlbumFromDb = async (albumId: string): Promise<MediaItem[]> => {
+
+  const mediaItemModel = getMediaitemModel();
+
+  const mediaItems: MediaItem[] = [];
+  const documents: any = await (mediaItemModel as any).find({ albumId }).exec();
+  for (const document of documents) {
+    const mediaItem: MediaItem = document.toObject() as MediaItem;
+    mediaItem.uniqueId = document.uniqueId.toString();
+    mediaItems.push(mediaItem);
+  }
+  return mediaItems;
+}
+
+export const getMediaItemsInNamedAlbumFromDb = async (albumName: string): Promise<MediaItem[]> => {
+  const mediaItemModel = getMediaitemModel();
+
+  const mediaItems: MediaItem[] = [];
+  const documents: any = await (mediaItemModel as any).find({ albumName }).exec();
+  for (const document of documents) {
+    const mediaItem: MediaItem = document.toObject() as MediaItem;
+    mediaItems.push(mediaItem);
+  }
+  return mediaItems;
+}

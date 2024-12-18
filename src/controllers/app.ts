@@ -22,7 +22,8 @@ import {
   addMediaItemToDeletedMediaItemsDBTable,
   getDeletedMediaItemsFromDb,
   removeDeleteMediaItemFromDb,
-  clearDeletedMediaItemsDb
+  clearDeletedMediaItemsDb,
+  getMediaItemsInNamedAlbumFromDb
 } from './dbInterface';
 import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData, UploadMediaFilesResponse } from '../types';
 import {
@@ -277,7 +278,7 @@ export const uploadAndImportEndpoint = async (request: Request, response: Respon
     const filePaths: string[] = files.map((file: Express.Multer.File) => file.path);
 
     await importFiles(filePaths);
-    
+
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadAndImportEndpoint:', error);
@@ -286,6 +287,10 @@ export const uploadAndImportEndpoint = async (request: Request, response: Respon
 }
 
 export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: Response, next: any) => {
+
+  // TEDTODO - should not be hard coded
+  const peopleTakeoutFilesDir = '/Users/tedshaffer/Documents/Projects/shafferography/shafferographyServer/public/peopleTakeoutFiles';
+
   try {
     const uploadedPeopleTakeoutFiles: Express.Multer.File[] = await uploadPeopleTakeoutFiles(request, response);
 
@@ -297,13 +302,21 @@ export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: R
         const metadataFileContents: string = fs.readFileSync(metadataFilePath, 'utf8');
         const metadata = JSON.parse(metadataFileContents);
         albumName = metadata.title;
-        console.log('metadata.json:');
-        console.log(metadataFilePath);
-        console.log(metadataFileContents);
-        console.log(metadata);
-        console.log('albumName:', albumName);
       }
     }
+
+    if (albumName === '') {
+      console.error('Album name not found in metadata.json');
+      response.status(500).json('Album name not found in metadata.json');
+      return;
+    }
+
+    const mediaItemsInAlbum: MediaItem[] = await getMediaItemsInNamedAlbumFromDb(albumName);
+    for (const mediaItemInAlbum of mediaItemsInAlbum) {
+      const pathToMediaMetadata: string = path.join(peopleTakeoutFilesDir, mediaItemInAlbum.fileName + '.json');
+      console.log('pathToMediaMetadata:', pathToMediaMetadata);
+    }
+
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadPeopleTakeoutsEndpoint:', error);
