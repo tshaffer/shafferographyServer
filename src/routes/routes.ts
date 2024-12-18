@@ -39,6 +39,7 @@ import {
   uploadToGoogleEndpoint,
   getAlbumNamesWherePeopleNotRetrieved,
   getAlbumNamesWherePeopleNotRetrievedEndpoint,
+  uploadPeopleTakeoutsEndpoint,
 } from '../controllers';
 import { createPhotosToDisplaySpec } from '../utilities/utilities';
 
@@ -91,6 +92,7 @@ export const createRoutes = (app: express.Application) => {
   app.get('/api/v1/googleMediaItem', getGoogleMediaItem);
 
   app.post('/api/v1/uploadAndImport', uploadAndImportEndpoint);
+  app.post('/api/v1/uploadPeopleTakeouts', uploadPeopleTakeoutsEndpoint);
 
   app.post('/api/v1/createGoogleAlbum', createGoogleAlbumEndpoint);
   app.post('/api/v1/addMediaItemsToAlbum', addMediaItemsToAlbumEndpoint);

@@ -27,6 +27,21 @@ const upload = multer({
   }),
 });
 
+const uploadPeopleTakeoutFile = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join('public/peopleTakeoutFiles');
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname); // Save file with original name
+    },
+  }),
+});
+
 export const uploadFiles = async (request: Request, response: Response): Promise<UploadMediaFilesResponse> => {
 
   return new Promise((resolve, reject) => {
@@ -52,6 +67,27 @@ export const uploadFiles = async (request: Request, response: Response): Promise
     });
   });
 };
+
+export const uploadPeopleTakeoutFiles = async (request: Request, response: Response): Promise<void> => {
+
+  return new Promise((resolve, reject) => {
+    uploadPeopleTakeoutFile.array('files')(request, response, (err) => {
+      if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
+        throw err;
+      } else if (err) {
+        console.error('Unknown error:', err);
+        throw err;
+      }
+
+      console.log('no error on uploadPeopleTakeoutFile');
+      console.log(request.files.length);
+
+      resolve();
+    });
+  });
+};
+
 
 async function getLocalStorageMediaItems(imageFilePaths: string[]): Promise<MediaItem[]> {
 

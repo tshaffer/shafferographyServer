@@ -32,7 +32,7 @@ import { MatchRule } from 'enums';
 import { importFromTakeout, redownloadGooglePhoto } from './takeouts';
 import { importFromLocalStorage } from './localStorage';
 import path from 'path';
-import { importFiles, uploadFiles } from './uploadImport';
+import { importFiles, uploadFiles, uploadPeopleTakeoutFiles } from './uploadImport';
 
 export const getVersion = (request: Request, response: Response, next: any) => {
   const data: any = {
@@ -281,6 +281,16 @@ export const uploadAndImportEndpoint = async (request: Request, response: Respon
     response.sendStatus(200);
   } catch (error) {
     console.error('Error in uploadAndImportEndpoint:', error);
+    response.status(500).json(error);
+  }
+}
+
+export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: Response, next: any) => {
+  try {
+    await uploadPeopleTakeoutFiles(request, response);
+    response.sendStatus(200);
+  } catch (error) {
+    console.error('Error in uploadPeopleTakeoutsEndpoint:', error);
     response.status(500).json(error);
   }
 }
