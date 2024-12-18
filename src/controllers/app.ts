@@ -26,7 +26,8 @@ import {
   getMediaItemsInNamedAlbumFromDb,
   addAutoPersonKeywordsToDb,
   getAutoPersonKeywordNodesFromDb,
-  getKeywordsFromDb
+  getKeywordsFromDb,
+  updateMediaItemFieldsInDb
 } from './dbInterface';
 import { Keyword, KeywordData, KeywordNode, MediaItem, SearchRule, SearchSpec, Takeout, AddedTakeoutData, UploadMediaFilesResponse, StringToStringLUT } from '../types';
 import {
@@ -372,8 +373,12 @@ export const uploadPeopleTakeoutsEndpoint = async (request: Request, response: R
 
       const people: string[]| null = takeoutMetadata.people ? takeoutMetadata.people : null;
 
-      console.log('peole', people);
-      console.log('keywordNodeIds', keywordNodeIds);
+      const updates: Partial<MediaItem> = {
+        people,
+        keywordNodeIds,
+      };
+      await updateMediaItemFieldsInDb(mediaItemInAlbum.uniqueId, updates);
+
     }
 
     response.sendStatus(200);
