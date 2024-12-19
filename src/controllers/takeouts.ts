@@ -4,7 +4,7 @@ import { AddedTakeoutData, Keyword, KeywordData, KeywordNode, MediaItem, StringT
 import { GoogleAlbum, GoogleMediaItem } from "googleTypes";
 import { GooglePhotoAPIs, getAlbumMediaItemsFromGoogle, getGoogleAlbumDataByName } from "./googlePhotos";
 import { addAutoPersonKeywordsToDb, addMediaItemToMediaItemsDBTable, deleteMediaItemsFromDb, getAllMediaItemsFromDb, getAutoPersonKeywordNodesFromDb, getKeywordsFromDb, getMediaItemsInAlbumFromDb, updateMediaItemInDb } from "./dbInterface";
-import { getJsonFilePaths, getImageFilePaths, isImageFile, getJsonFromFile, retrieveExifData, valueOrNull, fsLocalFolderExists, fsCreateNestedDirectory, getShardedDirectory } from "../utilities";
+import { getJsonFilePaths, getImageFilePaths, isImageFile, getJsonFromFile, retrieveExifData, valueOrNull, getShardedDirectory } from "../utilities";
 import { FilePathToExifTags, StringToStringLUT } from '../types';
 import { Tags } from "exiftool-vendored";
 import * as path from 'path';
@@ -338,7 +338,6 @@ const mediaItemsIdentical = (mediaItemFromTakeout: MediaItem, mediaItemFromDb: M
     isEqual(mediaItemFromTakeout.people, mediaItemFromDb.people)
   return mediaItemsAreIdentical;
 }
-
 
 const downloadGooglePhotos = async (googleAccessToken: string, mediaItemsDir: string) => {
 

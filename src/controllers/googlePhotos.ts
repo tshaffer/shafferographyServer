@@ -1,6 +1,6 @@
 import { GoogleAlbum, GoogleMediaItem } from "../types";
 // import { AuthService } from "../auth";
-import { isArray, isEmpty, isNil, isString } from 'lodash';
+import { isArray, isNil } from 'lodash';
 import { getGoogleRequest, postGoogleRequest } from './googleUtils';
 
 export const GooglePhotoAPIs = {
@@ -13,58 +13,6 @@ export const GooglePhotoAPIs = {
   batchCreate: 'https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate',
   BATCH_GET_LIMIT: 49
 };
-
-/*
-export const getMediaItemFromGoogle = async (authService: AuthService, id: string): Promise<GoogleMediaItem> => {
-
-  const url = `${GooglePhotoAPIs.mediaItem}${id}`;
-
-  const googleMediaItem: GoogleMediaItem = await getRequest(authService, url);
-
-  return googleMediaItem;
-}
-
-export const getAllMediaItemsFromGoogle = async (authService: AuthService, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
-
-  const googleMediaItems: GoogleMediaItem[] = [];
-
-  let url = GooglePhotoAPIs.mediaItems;
-
-  do {
-
-    if (nextPageToken != null) {
-      url = `${GooglePhotoAPIs.mediaItems}?pageToken=${nextPageToken}`;
-    }
-
-    try {
-
-      const response: any = await getRequest(authService, url);
-      if (!isNil(response)) {
-        if (isArray(response.mediaItems)) {
-          response.mediaItems.forEach((mediaItem: GoogleMediaItem) => {
-            googleMediaItems.push(mediaItem);
-          });
-        }
-        else {
-          console.log('response.mediaItems is not array');
-        }
-        nextPageToken = response.nextPageToken;
-      }
-      else {
-        console.log('response is nil');
-      }
-
-      console.log('number of googleMediaItems: ' + googleMediaItems.length);
-
-    } catch (err) {
-      nextPageToken = null;
-    }
-
-  } while (nextPageToken != null);
-
-  return googleMediaItems;
-};
-*/
 
 export const getMediaItemFromGoogle = async (googleAccessToken: string, id: string): Promise<GoogleMediaItem> => {
 
