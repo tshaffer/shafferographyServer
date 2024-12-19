@@ -36,7 +36,6 @@ import {
 } from '../utilities';
 import { MatchRule } from 'enums';
 import { importFromTakeout, redownloadGooglePhoto } from './takeouts';
-import { importFromLocalStorage } from './localStorage';
 import path from 'path';
 import { importFiles, uploadFiles, uploadPeopleTakeoutFiles } from './uploadImport';
 import { isNil } from 'lodash';
@@ -79,29 +78,6 @@ export const getMediaItemsToDisplayFromSearchSpec = async (request: Request, res
 
   const mediaItems: MediaItem[] = await getMediaItemsToDisplayFromDbUsingSearchSpec(searchSpec);
   response.json(mediaItems);
-};
-
-export const setDateRangeSpecification = async (request: Request, response: Response, next: any) => {
-  const { specifyDateRange, startDate, endDate } = request.body;
-  setDateRangeSpecificationDb(specifyDateRange, startDate, endDate);
-  response.sendStatus(200);
-}
-
-export const setStartDate = async (request: Request, response: Response, next: any) => {
-  const { startDate } = request.body;
-  // setStartDateDb(startDate);
-  response.sendStatus(200);
-}
-
-export const setEndDate = async (request: Request, response: Response, next: any) => {
-  const { endDate } = request.body;
-  // setEndDateDb(endDate);
-  response.sendStatus(200);
-}
-
-export const getPhotosToDisplaySpec = async (request: Request, response: Response, next: any) => {
-  const photosToDisplaySpec = await getPhotosToDisplaySpecFromDb();
-  response.json(photosToDisplaySpec);
 };
 
 export const getAllKeywordData = async (request: Request, response: Response, next: any) => {
@@ -254,27 +230,6 @@ export const getSubdirectoriesFromFs = async (dirPath: string): Promise<string[]
     }
     throw err;
   }
-}
-
-export const getLocalDriveImportFolders = async (request: Request, response: Response, next: any) => {
-  // const dirPath = 'public/SHAFFEROTO/googlePhotosOverflow/ReadyForImport';
-  const dirPath = '/Users/tedshaffer/Documents/photoConverterTmpData/ReadyForImport';
-  const folders: string[] = await getSubdirectoriesFromFs(dirPath);
-  response.json(folders);
-};
-
-export const importFromLocalStorageEndpoint = async (request: Request, response: Response, next: any) => {
-
-  const { folder } = request.body;
-
-  // const dirPath = 'public/SHAFFEROTO/googlePhotosOverflow/ReadyForImport';
-  const dirPath = '/Users/tedshaffer/Documents/photoConverterTmpData/ReadyForImport';
-  const realDirPath = await realpath(dirPath);
-  const fullPath: string = path.join(realDirPath, folder);
-
-  await importFromLocalStorage(fullPath);
-
-  response.sendStatus(200);
 }
 
 export const uploadAndImportEndpoint = async (request: Request, response: Response, next: any) => {

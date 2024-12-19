@@ -7,10 +7,6 @@ import {
   getImage,
   getMediaItemsToDisplay,
   getVersion,
-  getPhotosToDisplaySpec,
-  setEndDate,
-  setStartDate,
-  setDateRangeSpecification,
   getAllKeywordData,
   addKeyword,
   addKeywordNode,
@@ -26,22 +22,11 @@ import {
   clearDeletedMediaItems,
   removeDeletedMediaItem,
   redownloadMediaItemEndpoint,
-  getLocalDriveImportFolders,
-  importFromLocalStorageEndpoint,
-  uploadGoogleMediaItemEndpoint,
-  uploadRawMediaEndpoint,
-  convertHEICFileEndpoint,
-  convertHEICFilesEndpoint,
-  getGoogleMediaItem,
-  createGoogleAlbumEndpoint,
-  addMediaItemsToAlbumEndpoint,
   uploadAndImportEndpoint,
   uploadToGoogleEndpoint,
-  getAlbumNamesWherePeopleNotRetrieved,
   getAlbumNamesWherePeopleNotRetrievedEndpoint,
   uploadPeopleTakeoutsEndpoint,
 } from '../controllers';
-import { createPhotosToDisplaySpec } from '../utilities/utilities';
 
 export const createRoutes = (app: express.Application) => {
   app.get('/', getIndex);
@@ -53,15 +38,11 @@ export const createRoutes = (app: express.Application) => {
   app.get('/images/test.jpg', getImage);
 
   app.get('/api/v1/version', getVersion);
-  app.get('/api/v1/createPhotosToDisplaySpec', createPhotosToDisplaySpec);
   app.get('/api/v1/mediaItemsToDisplay', getMediaItemsToDisplay);
   app.get('/api/v1/mediaItemsToDisplayFromSearchSpec', getMediaItemsToDisplayFromSearchSpec);
-  app.get('/api/v1/photosToDisplaySpec', getPhotosToDisplaySpec);
   app.get('/api/v1/allKeywordData', getAllKeywordData);
   app.get('/api/v1/takeouts', getTakeouts);
   app.get('/api/v1/deletedMediaItems', getDeletedMediaItems);
-
-  app.get('/api/v1/localDriveImportFolders', getLocalDriveImportFolders);
 
   app.post('/api/v1/deleteMediaItems', deleteMediaItems);
   app.post('/api/v1/clearDeletedMediaItems', clearDeletedMediaItems);
@@ -73,32 +54,14 @@ export const createRoutes = (app: express.Application) => {
   app.post('/api/v1/setRootKeywordNode', setRootKeywordNode);
   app.post('/api/v1/initializeKeywordTree', initializeKeywordTree);
 
-  app.post('/api/v1/setStartDate', setStartDate);
-  app.post('/api/v1/setEndDate', setEndDate);
-
-  app.post('/api/v1/dateRangeSpecification', setDateRangeSpecification);
-
-  app.post('/api/v1/addTakeout', addTakeout);
   app.post('/api/v1/importFromTakeout', importFromTakeoutEndpoint);
-  app.post('/api/v1/importFromLocalStorage', importFromLocalStorageEndpoint);
-
-  app.post('/api/v1/redownloadMediaItem', redownloadMediaItemEndpoint);
-
-  app.post('/api/v1/uploadMediaItem', uploadGoogleMediaItemEndpoint);
-  app.post('/api/v1/uploadRawMedia', uploadRawMediaEndpoint);
-  app.post('/api/v1/convertHEICFiles', convertHEICFilesEndpoint);
-  app.post('/api/v1/convertHEICFile', convertHEICFileEndpoint);
-
-  app.get('/api/v1/googleMediaItem', getGoogleMediaItem);
-
-  app.post('/api/v1/uploadAndImport', uploadAndImportEndpoint);
-  app.post('/api/v1/uploadPeopleTakeouts', uploadPeopleTakeoutsEndpoint);
-
-  app.post('/api/v1/createGoogleAlbum', createGoogleAlbumEndpoint);
-  app.post('/api/v1/addMediaItemsToAlbum', addMediaItemsToAlbumEndpoint);
-  app.post('/api/v1/uploadToGoogle', uploadToGoogleEndpoint);
 
   app.get('/api/v1/albumNamesWherePeopleNotRetrieved', getAlbumNamesWherePeopleNotRetrievedEndpoint);
+  app.post('/api/v1/uploadAndImport', uploadAndImportEndpoint);
+  app.post('/api/v1/uploadToGoogle', uploadToGoogleEndpoint);
+  app.post('/api/v1/uploadPeopleTakeouts', uploadPeopleTakeoutsEndpoint);
+
+  app.post('/api/v1/redownloadMediaItem', redownloadMediaItemEndpoint);
 
 };
 
