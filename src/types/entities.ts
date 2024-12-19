@@ -29,17 +29,6 @@ export interface MediaItem {
   keywordNodeIds: string[],
 }
 
-// export enum DateSelectorType {
-//   All = 'all',
-//   ByDateRange = 'byDateRange',
-// }
-
-export interface PhotosToDisplaySpec {
-  specifyDateRange: boolean;
-  startDate?: string;
-  endDate?: string;
-}
-
 export interface DateRangeSpecification {
   specifyDateRange: boolean;
   startDate?: string;

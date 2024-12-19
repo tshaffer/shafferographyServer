@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
 
-import { 
-  PhotosToDisplaySpec, 
- } from '../types';
-import { createPhotosToDisplaySpecDocument } from "../controllers";
 import { isNil } from 'lodash';
 import path from 'path';
 import { fsLocalFolderExists, fsCreateNestedDirectory } from './fsUtils';

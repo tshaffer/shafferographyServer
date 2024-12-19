@@ -6,8 +6,6 @@ import { promisify } from 'util';
 import { version } from '../version';
 import {
   getMediaItemsToDisplayFromDb,
-  getPhotosToDisplaySpecFromDb,
-  setDateRangeSpecificationDb,
   getAllKeywordDataFromDb,
   createKeywordDocument,
   createKeywordNodeDocument,
@@ -121,7 +119,6 @@ export const initializeKeywordTree = async (request: Request, response: Response
     parentNodeId: '',
     childrenNodeIds: []
   };
-  const rootKeywordNodeIdFromDb: string = await createKeywordNodeDocument(rootKeywordNode);
 
   const peopleKeyword: Keyword = {
     keywordId: 'peopleKeywordId',
@@ -136,7 +133,6 @@ export const initializeKeywordTree = async (request: Request, response: Response
     parentNodeId: rootKeywordNode.nodeId,
     childrenNodeIds: []
   };
-  const peopleKeywordNodeIdFromDb: string = await createKeywordNodeDocument(peopleKeywordNode);
 
   rootKeywordNode.childrenNodeIds.push(peopleKeywordNode.nodeId);
   await updateKeywordNodeDb(rootKeywordNode);

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
-import { CreateGoogleAlbumResponse, CreateMediaItemsResponse, MediaItem, UploadToGoogleResults } from '../types';
-import { addMediaItemsToAlbum, createGoogleAlbum, uploadToGoogle } from './googleUploader';
+import { CreateMediaItemsResponse, MediaItem, UploadToGoogleResults } from '../types';
+import { addMediaItemsToAlbum, uploadToGoogle } from './googleUploader';
 import { getAlbumNamesWherePeopleNotRetrieved, updateMediaItemFieldsInDb } from './dbInterface';
 
 export type TypedResponse<T> = Response & {

@@ -10,7 +10,6 @@ import {
 } from '../models';
 import {
   MediaItem,
-  PhotosToDisplaySpec,
   Keyword,
   KeywordNode,
   SearchSpec,
@@ -22,7 +21,6 @@ import {
   User,
 } from '../types';
 import { Document } from 'mongoose';
-import { getPhotosToDisplaySpecModel } from '../models/PhotosToDisplaySpec';
 import { DateSearchRuleType, KeywordSearchRuleType, MatchRule, SearchRuleType } from '../types/enums';
 import { getTakeoutModel } from '../models';
 
@@ -145,72 +143,6 @@ export const getMediaItemsToDisplayFromDbUsingSearchSpec = async (
     mediaItems.push(mediaItem);
   }
   return mediaItems;
-}
-
-export const createPhotosToDisplaySpecDocument = async (photosToDisplaySpec: PhotosToDisplaySpec): Promise<Document | void> => {
-  const photosToDisplaySpecModel = getPhotosToDisplaySpecModel();
-  return photosToDisplaySpecModel.create(photosToDisplaySpec)
-    .then((photosToDisplaySpecDocument: any) => {
-      return Promise.resolve(photosToDisplaySpecDocument);
-    }).catch((err: any) => {
-      return Promise.reject(err);
-    });
-}
-
-const updateDateRangeSpecificationSelector = async (photosToDisplaySpecModel: any, specifyDateRange: boolean, startDate?: string, endDate?: string): Promise<any> => {
-  const update: any = { specifyDateRange };
-  if (startDate) {
-    update.startDate = startDate;
-  }
-  if (endDate) {
-    update.endDate = endDate;
-  }
-  const doc = await photosToDisplaySpecModel.findOneAndUpdate({}, update, { new: true });
-}
-
-export const setDateRangeSpecificationDb = async (specifyDateRange: boolean, startDate?: string, endDate?: string): Promise<any> => {
-  const photosToDisplaySpecModel = getPhotosToDisplaySpecModel();
-  return photosToDisplaySpecModel.find({}
-    , (err: any, photosToDisplaySpecDocs: any) => {
-      if (err) {
-        console.error(err);
-      } else
-        if (isArray(photosToDisplaySpecDocs)) {
-          if (photosToDisplaySpecDocs.length === 0) {
-            // throw new Error('photosToDisplaySpecDocs.length === 0');
-            createPhotosToDisplaySpecDocument({
-              specifyDateRange,
-              startDate,
-              endDate,
-            })
-              .then((photosToDisplayDocument: any) => {
-                return Promise.resolve();
-              });
-          } if (photosToDisplaySpecDocs.length === 1) {
-            updateDateRangeSpecificationSelector(photosToDisplaySpecModel, specifyDateRange, startDate, endDate);
-            return Promise.resolve();
-          }
-        } else {
-          return Promise.reject('photosToDisplaySpecDocs is not an array');
-        }
-    });
-}
-
-export const getPhotosToDisplaySpecFromDb = async (): Promise<PhotosToDisplaySpec> => {
-
-  const photoToDisplaySpecModel = getPhotosToDisplaySpecModel();
-
-  let photosToDisplaySpec: PhotosToDisplaySpec = {
-    specifyDateRange: false,
-  };
-
-  const documents: any = await (photoToDisplaySpecModel as any).find().exec();
-  if (documents.length === 0) {
-  } else {
-    photosToDisplaySpec = documents[0].toObject() as PhotosToDisplaySpec;
-  }
-
-  return photosToDisplaySpec;
 }
 
 export const getKeywordsFromDb = async (): Promise<Keyword[]> => {
